@@ -28,6 +28,7 @@ export class Game {
     this.myPlayerName = null;
     this.myTeam = null;
     this.gameMode = null;
+    this.lastShootingState = false;
   }
 
   init(lobbyData) {
@@ -215,11 +216,24 @@ export class Game {
       // Send input to server
       const input = this.inputManager.getInputState();
       const mouseDelta = this.inputManager.getMouseDelta();
+      const shooting = this.inputManager.isShooting();
+      
+      // Trigger weapon visual effects when shooting starts
+      if (shooting && !this.lastShootingState) {
+        this.weaponSystem.shoot();
+        // Create shell casing
+        const casingPos = this.camera.position.clone();
+        casingPos.add(new THREE.Vector3(0.3, -0.1, -0.3));
+        const direction = new THREE.Vector3();
+        this.camera.getWorldDirection(direction);
+        this.particleSystem.createShellCasing(casingPos, direction);
+      }
+      this.lastShootingState = shooting;
       
       this.socket.emit('player:input', {
         keys: input,
         mouseDelta: mouseDelta,
-        shooting: this.inputManager.isShooting(),
+        shooting: shooting,
         reloading: this.inputManager.isReloading()
       });
       

@@ -20,8 +20,14 @@ const io = new Server(httpServer, {
 
 const PORT = process.env.PORT || 3000;
 
-// Serve static files from dist/client in production
-app.use(express.static(join(__dirname, '../dist/client')));
+// Serve static files from client directory in development
+app.use(express.static(join(__dirname, '../client')));
+app.use(express.static(join(__dirname, '../src/recources')));
+
+// Fallback to serve index.html for all routes
+app.get('*', (req, res) => {
+  res.sendFile(join(__dirname, '../client/index.html'));
+});
 
 const lobbyManager = new LobbyManager(io);
 const nameGenerator = new NameGenerator();
