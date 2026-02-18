@@ -1,0 +1,26 @@
+{
+  "name": "baiterfps",
+  "version": "1.0.0",
+  "description": "Browser-based multiplayer FPS game",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server/index.js",
+    "client": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["fps", "multiplayer", "threejs", "socketio"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.6.1",
+    "socket.io-client": "^4.6.1",
+    "three": "^0.160.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.12",
+    "concurrently": "^8.2.2"
+  }
+}

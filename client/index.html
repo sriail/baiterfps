@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BaiterFPS - Multiplayer Arena Shooter</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      overflow: hidden;
+      background: #000;
+      color: #fff;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    #hud {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Match Timer */
+    #matchTimer {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 48px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+
+    #matchTimer.warning {
+      color: #ff3333;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Health Bar */
+    #healthContainer {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+    }
+
+    #healthBar {
+      width: 200px;
+      height: 30px;
+      background: rgba(50, 50, 50, 0.8);
+      border: 2px solid #fff;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    #healthFill {
+      height: 100%;
+      background: linear-gradient(to right, #ff3333, #33ff33);
+      transition: width 0.3s;
+    }
+
+    #healthText {
+      position: absolute;
+      top: 5px;
+      left: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    }
+
+    /* Ammo Counter */
+    #ammoContainer {
+      position: absolute;
+      bottom: 30px;
+      right: 30px;
+      text-align: right;
+    }
+
+    #ammoCount {
+      font-size: 36px;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+
+    #reloadBar {
+      width: 200px;
+      height: 20px;
+      background: rgba(50, 50, 50, 0.8);
+      border: 2px solid #fff;
+      border-radius: 5px;
+      margin-top: 10px;
+      margin-left: auto;
+      overflow: hidden;
+      display: none;
+    }
+
+    #reloadFill {
+      height: 100%;
+      background: #ffaa00;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    #reloadText {
+      font-size: 16px;
+      margin-top: 5px;
+      display: none;
+    }
+
+    /* Kill Feed */
+    #killFeed {
+      position: absolute;
+      top: 80px;
+      right: 30px;
+      width: 300px;
+    }
+
+    .killEntry {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 8px;
+      margin-bottom: 5px;
+      border-left: 3px solid #ff3333;
+      font-size: 14px;
+      opacity: 1;
+      transition: opacity 0.5s;
+    }
+
+    .killEntry.fading {
+      opacity: 0;
+    }
+
+    /* Team Scores */
+    #teamScores {
+      position: absolute;
+      top: 80px;
+      left: 30px;
+      display: none;
+    }
+
+    .teamScore {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 10px 20px;
+      margin-bottom: 10px;
+      font-size: 20px;
+      font-weight: bold;
+      border-radius: 5px;
+    }
+
+    .teamScore.alpha {
+      border-left: 4px solid #3366ff;
+    }
+
+    .teamScore.omega {
+      border-left: 4px solid #ff3333;
+    }
+
+    /* Crosshair */
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+    }
+
+    #crosshair::before,
+    #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    #crosshair::before {
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      transform: translateY(-50%);
+    }
+
+    #crosshair::after {
+      left: 50%;
+      top: 0;
+      width: 2px;
+      height: 100%;
+      transform: translateX(-50%);
+    }
+
+    /* Hit Marker */
+    #hitMarker {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 30px;
+      height: 30px;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    #hitMarker.show {
+      opacity: 1;
+    }
+
+    #hitMarker::before,
+    #hitMarker::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: #fff;
+      top: 50%;
+      left: 0;
+    }
+
+    #hitMarker::before {
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    #hitMarker::after {
+      transform: translateY(-50%) rotate(-45deg);
+    }
+
+    /* Death Screen */
+    #deathScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      pointer-events: all;
+    }
+
+    #deathScreen.show {
+      display: flex;
+    }
+
+    #deathScreen h1 {
+      font-size: 72px;
+      color: #ff3333;
+      margin-bottom: 20px;
+    }
+
+    #killerName {
+      font-size: 24px;
+      margin-bottom: 30px;
+    }
+
+    #respawnButton {
+      padding: 15px 40px;
+      font-size: 24px;
+      background: #ff3333;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #respawnButton:hover {
+      background: #ff5555;
+    }
+
+    /* End Screen */
+    #endScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      pointer-events: all;
+      overflow-y: auto;
+    }
+
+    #endScreen.show {
+      display: flex;
+    }
+
+    #winnerText {
+      font-size: 64px;
+      font-weight: bold;
+      margin-bottom: 40px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+
+    #leaderboard {
+      width: 800px;
+      background: rgba(20, 20, 20, 0.9);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 30px;
+    }
+
+    #leaderboard h2 {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .leaderboardRow {
+      display: flex;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 18px;
+    }
+
+    .leaderboardRow:nth-child(2) {
+      background: linear-gradient(to right, rgba(255, 215, 0, 0.3), transparent);
+    }
+
+    .leaderboardRow:nth-child(3) {
+      background: linear-gradient(to right, rgba(192, 192, 192, 0.3), transparent);
+    }
+
+    .leaderboardRow:nth-child(4) {
+      background: linear-gradient(to right, rgba(205, 127, 50, 0.3), transparent);
+    }
+
+    .leaderboardRow > div {
+      flex: 1;
+      text-align: center;
+    }
+
+    .leaderboardRow > div:first-child {
+      flex: 0.5;
+    }
+
+    #playAgainButton {
+      padding: 15px 60px;
+      font-size: 28px;
+      background: #33aa33;
+      border: none;
+      border-radius: 5px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #playAgainButton:hover {
+      background: #44bb44;
+    }
+
+    /* Scoreboard */
+    #scoreboard {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      background: rgba(0, 0, 0, 0.9);
+      border: 2px solid #fff;
+      border-radius: 10px;
+      padding: 20px;
+      display: none;
+      pointer-events: all;
+    }
+
+    #scoreboard.show {
+      display: block;
+    }
+
+    #scoreboard h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .scoreRow {
+      display: flex;
+      padding: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .scoreRow > div {
+      flex: 1;
+      text-align: center;
+    }
+
+    /* Loading Screen */
+    #loadingScreen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    #loadingScreen h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+    }
+
+    #loadingText {
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div id="loadingScreen">
+    <h1>BAITERFPS</h1>
+    <div id="loadingText">Connecting to server...</div>
+  </div>
+
+  <canvas id="gameCanvas"></canvas>
+
+  <div id="hud">
+    <div id="matchTimer">5:00</div>
+    
+    <div id="healthContainer">
+      <div id="healthBar">
+        <div id="healthFill" style="width: 100%;"></div>
+      </div>
+      <div id="healthText">100 HP</div>
+    </div>
+
+    <div id="ammoContainer">
+      <div id="ammoCount">30 / 90</div>
+      <div id="reloadBar">
+        <div id="reloadFill"></div>
+      </div>
+      <div id="reloadText">RELOADING...</div>
+    </div>
+
+    <div id="killFeed"></div>
+
+    <div id="teamScores">
+      <div class="teamScore alpha">Team Alpha: <span id="alphaScore">0</span></div>
+      <div class="teamScore omega">Team Omega: <span id="omegaScore">0</span></div>
+    </div>
+
+    <div id="crosshair"></div>
+    <div id="hitMarker"></div>
+
+    <div id="deathScreen">
+      <h1>ELIMINATED</h1>
+      <div id="killerName">Killed by: Enemy</div>
+      <button id="respawnButton">RESPAWN</button>
+    </div>
+
+    <div id="endScreen">
+      <div id="winnerText">WINNER</div>
+      <div id="leaderboard">
+        <h2>TOP PLAYERS</h2>
+        <div class="leaderboardRow">
+          <div><strong>Rank</strong></div>
+          <div><strong>Player</strong></div>
+          <div><strong>Kills</strong></div>
+          <div><strong>Deaths</strong></div>
+          <div><strong>K/D</strong></div>
+        </div>
+      </div>
+      <button id="playAgainButton">PLAY AGAIN</button>
+    </div>
+
+    <div id="scoreboard">
+      <h2>SCOREBOARD</h2>
+      <div class="scoreRow">
+        <div><strong>Player</strong></div>
+        <div><strong>Kills</strong></div>
+        <div><strong>Deaths</strong></div>
+        <div><strong>K/D</strong></div>
+      </div>
+      <div id="scoreList"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>
