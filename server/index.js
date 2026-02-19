@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import rateLimit from 'express-rate-limit';
 import { LobbyManager } from './LobbyManager.js';
 import { NameGenerator } from './NameGenerator.js';
 
@@ -20,6 +21,16 @@ const io = new Server(httpServer, {
 
 const PORT = process.env.PORT || 3000;
 const isDev = process.env.NODE_ENV !== 'production';
+
+// Rate limiting for static file routes
+const limiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // Limit each IP to 100 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(limiter);
 
 if (isDev) {
   // In development, serve client files directly
