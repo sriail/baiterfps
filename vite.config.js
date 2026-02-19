@@ -1,6 +1,4 @@
-import { defineConfig } from 'vite';
-
-export default defineConfig({
+export default {
   root: 'client',
   publicDir: '../src/recources',
   build: {
@@ -16,4 +14,4 @@ export default defineConfig({
       }
     }
   }
-});
+};

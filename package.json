@@ -4,12 +4,14 @@
   "description": "Browser-based multiplayer FPS game",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "node server/index.js",
+    "setup": "node setup-assets.js",
+    "dev": "npm run setup && concurrently \"npm run server\" \"npm run client\"",
+    "server": "npm run setup && node server/index.js",
     "client": "vite --port 3001",
-    "build": "vite build",
+    "build": "npm run setup && vite build",
     "preview": "vite preview",
-    "start": "npm run build && node server/index.js"
+    "start": "npm run setup && npm run build && node server/index.js",
+    "postinstall": "npm run setup"
   },
   "keywords": [
     "fps",
