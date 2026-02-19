@@ -1,16 +1,92 @@
 import * as THREE from 'three';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
 export class RemotePlayer {
   constructor(playerData, scene, gameMode) {
     this.scene = scene;
     this.data = playerData;
     this.gameMode = gameMode;
+    this.loader = new FBXLoader();
+    this.mixer = null;
+    this.animations = {};
+    this.currentAction = null;
     
-    // Create player capsule
+    // Create player mesh (will be replaced with animated model)
     this.createPlayerMesh();
     
     // Create name label
     this.createNameLabel();
+    
+    // Load animations asynchronously
+    this.loadAnimations();
+  }
+
+  async loadAnimations() {
+    try {
+      // Load idle animation as the base model
+      const idleAnimation = await this.loadFBX('/player/rifle aiming idle.fbx');
+      
+      if (idleAnimation) {
+        // Remove simple mesh and use animated model
+        if (this.mesh) {
+          this.scene.remove(this.mesh);
+        }
+        
+        // Scale and setup the model
+        idleAnimation.scale.set(0.01, 0.01, 0.01);
+        idleAnimation.position.set(
+          this.data.position.x,
+          this.data.position.y,
+          this.data.position.z
+        );
+        
+        // Enable shadows
+        idleAnimation.traverse((child) => {
+          if (child.isMesh) {
+            child.castShadow = true;
+            child.receiveShadow = true;
+            
+            // Apply team color to materials
+            if (child.material && this.data.team) {
+              const teamColor = this.data.team === 'alpha' ? 0x3366ff : 
+                                this.data.team === 'omega' ? 0xff3333 : 0x888888;
+              child.material = child.material.clone();
+              child.material.color.setHex(teamColor);
+            }
+          }
+        });
+        
+        this.mesh = idleAnimation;
+        this.scene.add(this.mesh);
+        
+        // Re-add name label to new mesh
+        if (this.nameLabel) {
+          this.mesh.add(this.nameLabel);
+        }
+        
+        // Setup animation mixer
+        this.mixer = new THREE.AnimationMixer(this.mesh);
+        
+        // Play idle animation
+        if (idleAnimation.animations && idleAnimation.animations.length > 0) {
+          this.currentAction = this.mixer.clipAction(idleAnimation.animations[0]);
+          this.currentAction.play();
+        }
+      }
+    } catch (error) {
+      console.warn('Could not load player animations, using simple model:', error);
+    }
+  }
+
+  async loadFBX(path) {
+    return new Promise((resolve, reject) => {
+      this.loader.load(
+        path,
+        (object) => resolve(object),
+        undefined,
+        (error) => reject(error)
+      );
+    });
   }
 
   createPlayerMesh() {
@@ -86,7 +162,7 @@ export class RemotePlayer {
     this.mesh.add(this.nameLabel);
   }
 
-  update(playerData) {
+  update(playerData, deltaTime) {
     this.data = playerData;
     
     // Interpolate position (simplified - should use proper interpolation)
@@ -98,6 +174,11 @@ export class RemotePlayer {
     
     // Update rotation
     this.mesh.rotation.y = playerData.rotation.y;
+    
+    // Update animation mixer if available
+    if (this.mixer && deltaTime) {
+      this.mixer.update(deltaTime);
+    }
     
     // Update name label with health
     this.updateNameLabel();

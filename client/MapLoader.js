@@ -1,68 +1,72 @@
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
 export class MapLoader {
   constructor(scene) {
     this.scene = scene;
     this.collisionMeshes = [];
+    this.loader = new GLTFLoader();
+    this.currentMap = null;
   }
 
-  loadMap(mapName) {
-    // For now, create a simple placeholder map with ground and walls
-    // In a full implementation, this would load the actual map files from the zip archives
-    
+  async loadMap(mapName) {
     console.log(`Loading map: ${mapName}`);
     
-    // Ground
-    const groundGeometry = new THREE.PlaneGeometry(100, 100);
-    const groundMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x556B2F,
-      roughness: 0.8,
-      metalness: 0.2
+    // Remove previous map if exists
+    if (this.currentMap) {
+      this.scene.remove(this.currentMap);
+      this.collisionMeshes = [];
+    }
+
+    // Map the map name to the GLTF file path
+    const mapPaths = {
+      'snow_town': '/snow_town/scene.gltf',
+      'old_town': '/old_town/scene.gltf',
+      'arabic_city': '/arabic_city/scene.gltf'
+    };
+
+    const mapPath = mapPaths[mapName] || mapPaths['snow_town'];
+
+    return new Promise((resolve, reject) => {
+      this.loader.load(
+        mapPath,
+        (gltf) => {
+          console.log('Map loaded successfully:', mapName);
+          this.currentMap = gltf.scene;
+          
+          // Scale and position the map appropriately
+          this.currentMap.scale.set(1, 1, 1);
+          this.currentMap.position.set(0, 0, 0);
+          
+          // Enable shadows on all meshes and collect for collision
+          this.currentMap.traverse((child) => {
+            if (child.isMesh) {
+              child.castShadow = true;
+              child.receiveShadow = true;
+              
+              // Add to collision meshes
+              this.collisionMeshes.push(child);
+              
+              // Ensure materials are set up properly
+              if (child.material) {
+                child.material.needsUpdate = true;
+              }
+            }
+          });
+          
+          this.scene.add(this.currentMap);
+          resolve(this.currentMap);
+        },
+        (progress) => {
+          const percent = (progress.loaded / progress.total) * 100;
+          console.log(`Loading map: ${percent.toFixed(0)}%`);
+        },
+        (error) => {
+          console.error('Error loading map:', error);
+          reject(error);
+        }
+      );
     });
-    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.rotation.x = -Math.PI / 2;
-    ground.receiveShadow = true;
-    this.scene.add(ground);
-    this.collisionMeshes.push(ground);
-
-    // Add some walls for cover
-    this.createWall(0, 1.5, -20, 20, 3, 1, 0x8B4513);
-    this.createWall(20, 1.5, 0, 1, 3, 20, 0x8B4513);
-    this.createWall(-20, 1.5, 0, 1, 3, 20, 0x8B4513);
-    this.createWall(0, 1.5, 20, 20, 3, 1, 0x8B4513);
-
-    // Add some obstacles
-    this.createBox(10, 1, 10, 3, 2, 3, 0x696969);
-    this.createBox(-10, 1, 10, 3, 2, 3, 0x696969);
-    this.createBox(10, 1, -10, 3, 2, 3, 0x696969);
-    this.createBox(-10, 1, -10, 3, 2, 3, 0x696969);
-    this.createBox(0, 1.5, 0, 4, 3, 4, 0xA0522D);
-
-    // Add perimeter walls
-    this.createWall(0, 2.5, -50, 100, 5, 1, 0x808080);
-    this.createWall(0, 2.5, 50, 100, 5, 1, 0x808080);
-    this.createWall(-50, 2.5, 0, 1, 5, 100, 0x808080);
-    this.createWall(50, 2.5, 0, 1, 5, 100, 0x808080);
-  }
-
-  createWall(x, y, z, width, height, depth, color) {
-    const geometry = new THREE.BoxGeometry(width, height, depth);
-    const material = new THREE.MeshStandardMaterial({ 
-      color: color,
-      roughness: 0.7,
-      metalness: 0.3
-    });
-    const wall = new THREE.Mesh(geometry, material);
-    wall.position.set(x, y, z);
-    wall.castShadow = true;
-    wall.receiveShadow = true;
-    this.scene.add(wall);
-    this.collisionMeshes.push(wall);
-    return wall;
-  }
-
-  createBox(x, y, z, width, height, depth, color) {
-    return this.createWall(x, y, z, width, height, depth, color);
   }
 
   checkCollision(position, radius = 0.5) {

@@ -87,8 +87,10 @@ export class Game {
     this.weaponSystem = new WeaponSystem(this.scene, this.camera);
     this.particleSystem = new ParticleSystem(this.scene);
 
-    // Load map
-    this.mapLoader.loadMap(lobbyData.map);
+    // Load map (async)
+    this.mapLoader.loadMap(lobbyData.map).catch(err => {
+      console.error('Failed to load map, game may not work correctly:', err);
+    });
 
     // Set up socket listeners
     this.setupSocketListeners();
@@ -206,6 +208,13 @@ export class Game {
     requestAnimationFrame(() => this.animate());
 
     const deltaTime = this.clock.getDelta();
+
+    // Update remote player animations
+    for (const [id, player] of this.remotePlayers) {
+      if (player.mixer) {
+        player.mixer.update(deltaTime);
+      }
+    }
 
     // Update systems
     if (document.pointerLockElement === this.canvas) {
