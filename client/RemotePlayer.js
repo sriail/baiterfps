@@ -162,7 +162,7 @@ export class RemotePlayer {
     this.mesh.add(this.nameLabel);
   }
 
-  update(playerData, deltaTime) {
+  update(playerData) {
     this.data = playerData;
     
     // Interpolate position (simplified - should use proper interpolation)
@@ -175,10 +175,7 @@ export class RemotePlayer {
     // Update rotation
     this.mesh.rotation.y = playerData.rotation.y;
     
-    // Update animation mixer if available
-    if (this.mixer && deltaTime) {
-      this.mixer.update(deltaTime);
-    }
+    // Note: Animation mixer is updated in Game.js animate loop
     
     // Update name label with health
     this.updateNameLabel();
