@@ -19,14 +19,23 @@ const io = new Server(httpServer, {
 });
 
 const PORT = process.env.PORT || 3000;
+const isDev = process.env.NODE_ENV !== 'production';
 
-// Serve static files from client directory in development
-app.use(express.static(join(__dirname, '../client')));
-app.use(express.static(join(__dirname, '../src/recources')));
+if (isDev) {
+  // In development, serve client files directly
+  app.use(express.static(join(__dirname, '../client')));
+  app.use(express.static(join(__dirname, '../src/recources')));
+} else {
+  // In production, serve built files
+  app.use(express.static(join(__dirname, '../dist/client')));
+}
 
 // Fallback to serve index.html for all routes
 app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, '../client/index.html'));
+  const indexPath = isDev 
+    ? join(__dirname, '../client/index.html')
+    : join(__dirname, '../dist/client/index.html');
+  res.sendFile(indexPath);
 });
 
 const lobbyManager = new LobbyManager(io);

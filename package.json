@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "node server/index.js",
-    "client": "vite",
+    "client": "vite --port 3001",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "npm run build && node server/index.js"
   },
   "keywords": ["fps", "multiplayer", "threejs", "socketio"],
   "author": "",
