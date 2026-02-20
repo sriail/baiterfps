@@ -507,8 +507,9 @@ async function startGame(mapName, code) {
   loadingText.textContent = 'Loading ' + formatMapName(mapName) + '...';
   loadingBar.style.width = '5%';
 
-  // Performance: cap pixel ratio at 1.5 to reduce GPU load
-  const maxPixelRatio = Math.min(window.devicePixelRatio, 1.5);
+  // Performance: cap pixel ratio to reduce GPU load on high-DPI screens
+  const MAX_PIXEL_RATIO = 1.5;
+  const maxPixelRatio = Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO);
   renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(maxPixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
@@ -630,9 +631,12 @@ function loadMap(mapName) {
 
         // ── Step 6: find multiple spawn points across the map ──────────────────
         {
+          // Concentric rings from center outward; 12 angles per ring for good coverage
           const SPAWN_SEARCH_RADII         = [0, 3, 6, 10, 15, 20, 25, 30, 40, 50, 60, 70];
           const SPAWN_SEARCH_ANGULAR_STEPS = 12;
-          const GROUND_PLANE_Y             = 0.0;
+          const GROUND_PLANE_Y             = 0.0;  // ignore fallback ground at y=-0.05
+          const CEILING_CHECK_DIST         = 1.0;  // how far up to check for ceiling
+          const MIN_CEILING_CLEARANCE      = 0.8;  // reject if ceiling is closer than this
 
           const spawnRay = new THREE.Raycaster();
           const downVec  = new THREE.Vector3(0, -1, 0);
@@ -661,9 +665,9 @@ function loadMap(mapName) {
                 // very close, the player would be trapped inside the mesh
                 const checkOrigin = new THREE.Vector3(px, hit.point.y + player.height + 0.1, pz);
                 spawnRay.set(checkOrigin, upVec);
-                spawnRay.far = 1.0;
+                spawnRay.far = CEILING_CHECK_DIST;
                 const ceilingHits = spawnRay.intersectObjects(collidables, true);
-                if (ceilingHits.length > 0 && ceilingHits[0].distance < 0.8) {
+                if (ceilingHits.length > 0 && ceilingHits[0].distance < MIN_CEILING_CLEARANCE) {
                   continue; // too close to ceiling — player would be stuck
                 }
 
