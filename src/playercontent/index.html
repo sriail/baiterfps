@@ -19,8 +19,26 @@
     #menu h1 {
       font-size: 4rem; font-weight: 900; letter-spacing: 0.1em;
       color: #e63946; text-shadow: 0 0 30px #e63946aa;
-      margin-bottom: 3rem;
+      margin-bottom: 1.5rem;
     }
+    #name-row {
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    #name-row label { color: #aaa; font-size: 1rem; }
+    #name-input {
+      background: #111; border: 1px solid #444; color: #fff;
+      padding: 0.5rem 0.8rem; font-size: 1rem; outline: none;
+      width: 180px;
+    }
+    #name-input:focus { border-color: #e63946; }
+    #name-save {
+      padding: 0.5rem 1rem; background: transparent;
+      border: 1.5px solid #e63946; color: #fff;
+      cursor: pointer; font-size: 0.9rem;
+      transition: background 0.15s;
+    }
+    #name-save:hover { background: #e63946; }
     .menu-btn {
       width: 280px; padding: 1rem 2rem;
       margin: 0.6rem 0;
@@ -34,6 +52,20 @@
       background: #e63946;
       box-shadow: 0 0 20px #e63946;
     }
+    .menu-btn.quick-play {
+      border-color: #4caf50; color: #4caf50;
+    }
+    .menu-btn.quick-play:hover {
+      background: #4caf50; color: #fff;
+      box-shadow: 0 0 20px #4caf50;
+    }
+
+    #create-dialog {
+      position: fixed; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.85); z-index: 20;
+    }
+    #create-dialog.visible { display: flex; }
 
     #code-dialog {
       position: fixed; inset: 0;
@@ -53,6 +85,13 @@
       text-transform: uppercase; outline: none;
     }
     .dialog-box input:focus { border-color: #e63946; }
+    .dialog-box label { color: #aaa; font-size: 1rem; margin-bottom: 0.2rem; }
+    .dialog-box select {
+      background: #111; border: 1px solid #444; color: #fff;
+      padding: 0.7rem 1rem; font-size: 1.1rem; outline: none;
+      cursor: pointer;
+    }
+    .dialog-box select:focus { border-color: #e63946; }
     .dialog-row { display: flex; gap: 0.5rem; }
     .dialog-row button {
       flex: 1; padding: 0.7rem;
@@ -66,22 +105,63 @@
     #lobby-screen {
       position: fixed; inset: 0;
       display: none; flex-direction: column;
-      align-items: center; justify-content: center;
+      align-items: center; justify-content: flex-start;
+      padding-top: 2rem;
       background: radial-gradient(ellipse at center, #0d1b2a 0%, #050508 100%);
-      z-index: 10;
+      z-index: 10; overflow-y: auto;
     }
     #lobby-screen.visible { display: flex; }
-    #lobby-screen h2 { font-size: 2rem; color: #e63946; margin-bottom: 1rem; }
+    #lobby-screen h2 { font-size: 2rem; color: #e63946; margin-bottom: 0.5rem; }
     #lobby-code-display {
-      font-size: 3rem; font-weight: 900; letter-spacing: 0.3em;
-      color: #fff; background: #111; padding: 0.8rem 2rem;
+      font-size: 2.5rem; font-weight: 900; letter-spacing: 0.3em;
+      color: #fff; background: #111; padding: 0.5rem 1.5rem;
       border: 2px solid #e63946; margin-bottom: 0.5rem;
     }
-    #lobby-map-display { color: #aaa; font-size: 1.1rem; margin-bottom: 1rem; }
-    #player-count { color: #aaa; font-size: 1rem; margin-bottom: 1rem; }
+    #lobby-map-display { color: #aaa; font-size: 1.1rem; margin-bottom: 0.3rem; }
+    #map-select-row {
+      display: none; align-items: center; gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    #map-select-row.visible { display: flex; }
+    #map-select-row label { color: #aaa; font-size: 1rem; }
+    #lobby-map-select {
+      background: #111; border: 1px solid #444; color: #fff;
+      padding: 0.4rem 0.8rem; font-size: 1rem; outline: none;
+      cursor: pointer;
+    }
+    #player-count { color: #aaa; font-size: 1rem; margin-bottom: 0.5rem; }
+
+    #lobby-player-list {
+      width: 90%; max-width: 500px;
+      display: flex; flex-direction: column; gap: 0.3rem;
+      margin-bottom: 0.8rem; max-height: 200px; overflow-y: auto;
+    }
+    .player-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #111; border: 1px solid #333; padding: 0.5rem 1rem;
+      font-size: 0.95rem;
+    }
+    .player-item .player-name { color: #fff; }
+    .player-item .player-host-badge {
+      color: #e63946; font-size: 0.8rem; margin-left: 0.5rem;
+    }
+    .player-item-actions { display: flex; gap: 0.3rem; }
+    .player-item-actions button {
+      padding: 0.3rem 0.6rem; font-size: 0.8rem;
+      background: transparent; border: 1px solid #555;
+      color: #ccc; cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    }
+    .player-item-actions button:hover { border-color: #e63946; color: #fff; }
+    .player-item-actions button.kick-btn { border-color: #e63946; color: #e63946; }
+    .player-item-actions button.kick-btn:hover { background: #e63946; color: #fff; }
+
+    #admin-controls {
+      display: none; flex-direction: column; align-items: center; gap: 0.5rem;
+      margin-bottom: 0.8rem;
+    }
+    #admin-controls.visible { display: flex; }
     #visibility-toggle {
       width: 220px; padding: 0.7rem;
-      margin-bottom: 1.5rem;
       background: transparent; border: 1.5px solid #e63946;
       color: #fff; font-size: 1rem; cursor: pointer;
       transition: background 0.15s;
@@ -95,6 +175,58 @@
       transition: box-shadow 0.2s;
     }
     #start-btn:hover { box-shadow: 0 0 20px #e63946; }
+
+    /* Chat (lobby + in-game) */
+    #lobby-chat {
+      width: 90%; max-width: 500px;
+      display: flex; flex-direction: column; gap: 0.3rem;
+      margin-top: 0.5rem;
+    }
+    #lobby-chat-messages {
+      background: #0a0a12; border: 1px solid #333;
+      height: 140px; overflow-y: auto; padding: 0.5rem;
+      font-size: 0.85rem; color: #ccc;
+    }
+    .chat-msg { margin-bottom: 0.2rem; }
+    .chat-msg.system { color: #888; font-style: italic; }
+    .chat-msg.pm { color: #9b59b6; }
+    .chat-msg .chat-sender { color: #e63946; font-weight: bold; }
+    #lobby-chat-input-row {
+      display: flex; gap: 0.3rem;
+    }
+    #lobby-chat-input {
+      flex: 1; background: #111; border: 1px solid #444;
+      color: #fff; padding: 0.5rem; font-size: 0.9rem; outline: none;
+    }
+    #lobby-chat-input:focus { border-color: #e63946; }
+    #lobby-chat-send {
+      padding: 0.5rem 1rem; background: #e63946; border: none;
+      color: #fff; cursor: pointer; font-size: 0.9rem;
+    }
+
+    /* In-game chat */
+    #game-chat {
+      position: fixed; bottom: 1rem; left: 1rem;
+      width: 350px; z-index: 6; pointer-events: none;
+    }
+    #game-chat.active { pointer-events: auto; }
+    #game-chat-messages {
+      background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+      height: 120px; overflow-y: auto; padding: 0.5rem;
+      font-size: 0.8rem; color: #ccc; pointer-events: auto;
+    }
+    #game-chat-input-row {
+      display: none; gap: 0.3rem; margin-top: 0.3rem;
+    }
+    #game-chat-input-row.visible { display: flex; }
+    #game-chat-input {
+      flex: 1; background: rgba(0,0,0,0.7); border: 1px solid #555;
+      color: #fff; padding: 0.4rem; font-size: 0.85rem; outline: none;
+    }
+    #game-chat-send {
+      padding: 0.4rem 0.8rem; background: #e63946; border: none;
+      color: #fff; cursor: pointer; font-size: 0.85rem;
+    }
 
     #server-list-screen {
       position: fixed; inset: 0;
@@ -117,7 +249,9 @@
       cursor: pointer; transition: border-color 0.15s, background 0.15s;
     }
     .server-item:hover { border-color: #e63946; background: #1a1a2e; }
+    .server-item-info { display: flex; flex-direction: column; }
     .server-item-map { color: #fff; font-size: 1.1rem; }
+    .server-item-status { color: #666; font-size: 0.8rem; }
     .server-item-players { color: #aaa; font-size: 0.95rem; }
     #server-list-empty { color: #666; font-size: 1rem; margin-bottom: 2rem; }
     #server-list-back {
@@ -185,6 +319,16 @@
       display: none; z-index: 5;
     }
     #lock-msg.visible { display: block; }
+
+    /* Kicked overlay */
+    #kicked-overlay {
+      position: fixed; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.9); z-index: 25;
+    }
+    #kicked-overlay.visible { display: flex; }
+    #kicked-overlay .dialog-box { text-align: center; }
+    #kicked-overlay p { color: #ff6b6b; font-size: 1.2rem; margin-bottom: 1rem; }
   </style>
 </head>
 <body>
@@ -192,9 +336,31 @@
 <!-- Main Menu -->
 <div id="menu">
   <h1>BAITERFPS</h1>
+  <div id="name-row">
+    <label>Name:</label>
+    <input id="name-input" type="text" maxlength="20" placeholder="Loading..." autocomplete="off" />
+    <button id="name-save">SAVE</button>
+  </div>
   <button class="menu-btn" id="btn-create">CREATE LOBBY</button>
   <button class="menu-btn" id="btn-enter">ENTER CODE</button>
   <button class="menu-btn" id="btn-servers">SERVER LIST</button>
+  <button class="menu-btn quick-play" id="btn-quickplay">⚡ QUICK PLAY</button>
+</div>
+
+<!-- Create Lobby Dialog (map selection) -->
+<div id="create-dialog">
+  <div class="dialog-box">
+    <h2>CREATE LOBBY</h2>
+    <label>Select Map</label>
+    <select id="create-map-select">
+      <option value="arabic_city">Arabic City</option>
+      <option value="snow_town">Snow Town</option>
+    </select>
+    <div class="dialog-row">
+      <button id="create-confirm-btn">CREATE</button>
+      <button id="create-cancel-btn">CANCEL</button>
+    </div>
+  </div>
 </div>
 
 <!-- Enter Code Dialog -->
@@ -224,15 +390,43 @@
   <h2>LOBBY</h2>
   <div id="lobby-code-display">------</div>
   <div id="lobby-map-display">Map: -</div>
+  <div id="map-select-row">
+    <label>Change Map:</label>
+    <select id="lobby-map-select">
+      <option value="arabic_city">Arabic City</option>
+      <option value="snow_town">Snow Town</option>
+    </select>
+  </div>
   <div id="player-count">Players: 1 / 16</div>
-  <button id="visibility-toggle">PRIVATE</button>
-  <button id="start-btn">START GAME</button>
+  <div id="lobby-player-list"></div>
+  <div id="admin-controls">
+    <button id="visibility-toggle">PRIVATE</button>
+    <button id="start-btn">START GAME</button>
+  </div>
+  <div id="lobby-chat">
+    <div id="lobby-chat-messages"></div>
+    <div id="lobby-chat-input-row">
+      <input id="lobby-chat-input" type="text" maxlength="200" placeholder="Type a message..." autocomplete="off" />
+      <button id="lobby-chat-send">SEND</button>
+    </div>
+  </div>
 </div>
 
 <!-- Loading Screen -->
 <div id="loading-screen">
   <p id="loading-text">Loading map...</p>
   <div id="loading-bar-wrap"><div id="loading-bar"></div></div>
+</div>
+
+<!-- Kicked Overlay -->
+<div id="kicked-overlay">
+  <div class="dialog-box">
+    <h2>KICKED</h2>
+    <p id="kicked-reason">You were kicked from the lobby.</p>
+    <div class="dialog-row">
+      <button id="kicked-ok-btn">OK</button>
+    </div>
+  </div>
 </div>
 
 <!-- HUD -->
@@ -243,6 +437,15 @@
 </div>
 <div id="crosshair"></div>
 <div id="lock-msg">Click to capture mouse</div>
+
+<!-- In-game chat -->
+<div id="game-chat">
+  <div id="game-chat-messages"></div>
+  <div id="game-chat-input-row">
+    <input id="game-chat-input" type="text" maxlength="200" placeholder="Press T to chat..." autocomplete="off" />
+    <button id="game-chat-send">SEND</button>
+  </div>
+</div>
 
 <!-- Three.js + Socket.io -->
 <script src="/socket.io/socket.io.js"></script>
@@ -264,35 +467,57 @@ if ('serviceWorker' in navigator) {
 }
 
 // DOM refs
-const menuEl        = document.getElementById('menu');
-const btnCreate     = document.getElementById('btn-create');
-const btnEnter      = document.getElementById('btn-enter');
-const btnServers    = document.getElementById('btn-servers');
-const codeDialog    = document.getElementById('code-dialog');
-const codeInput     = document.getElementById('code-input');
-const codeJoinBtn   = document.getElementById('code-join-btn');
-const codeCancelBtn = document.getElementById('code-cancel-btn');
-const dialogError   = document.getElementById('dialog-error');
-const lobbyScreen   = document.getElementById('lobby-screen');
-const lobbyCodeEl   = document.getElementById('lobby-code-display');
-const lobbyMapEl    = document.getElementById('lobby-map-display');
-const playerCountEl = document.getElementById('player-count');
-const visibilityBtn = document.getElementById('visibility-toggle');
-const startBtn      = document.getElementById('start-btn');
-const serverListScreen = document.getElementById('server-list-screen');
-const serverListEl     = document.getElementById('server-list');
-const serverListEmpty  = document.getElementById('server-list-empty');
-const serverListBack   = document.getElementById('server-list-back');
-const serverListRefresh= document.getElementById('server-list-refresh');
-const loadingScreen = document.getElementById('loading-screen');
-const loadingText   = document.getElementById('loading-text');
-const loadingBar    = document.getElementById('loading-bar');
-const hud           = document.getElementById('hud');
-const hudCode       = document.getElementById('hud-code');
-const hudMap        = document.getElementById('hud-map');
-const hudPlayers    = document.getElementById('hud-players');
-const crosshair     = document.getElementById('crosshair');
-const lockMsg       = document.getElementById('lock-msg');
+const menuEl          = document.getElementById('menu');
+const nameInput       = document.getElementById('name-input');
+const nameSaveBtn     = document.getElementById('name-save');
+const btnCreate       = document.getElementById('btn-create');
+const btnEnter        = document.getElementById('btn-enter');
+const btnServers      = document.getElementById('btn-servers');
+const btnQuickPlay    = document.getElementById('btn-quickplay');
+const createDialog    = document.getElementById('create-dialog');
+const createMapSelect = document.getElementById('create-map-select');
+const createConfirmBtn= document.getElementById('create-confirm-btn');
+const createCancelBtn = document.getElementById('create-cancel-btn');
+const codeDialog      = document.getElementById('code-dialog');
+const codeInput       = document.getElementById('code-input');
+const codeJoinBtn     = document.getElementById('code-join-btn');
+const codeCancelBtn   = document.getElementById('code-cancel-btn');
+const dialogError     = document.getElementById('dialog-error');
+const lobbyScreen     = document.getElementById('lobby-screen');
+const lobbyCodeEl     = document.getElementById('lobby-code-display');
+const lobbyMapEl      = document.getElementById('lobby-map-display');
+const mapSelectRow    = document.getElementById('map-select-row');
+const lobbyMapSelect  = document.getElementById('lobby-map-select');
+const playerCountEl   = document.getElementById('player-count');
+const lobbyPlayerList = document.getElementById('lobby-player-list');
+const adminControls   = document.getElementById('admin-controls');
+const visibilityBtn   = document.getElementById('visibility-toggle');
+const startBtn        = document.getElementById('start-btn');
+const lobbyChatMsgs   = document.getElementById('lobby-chat-messages');
+const lobbyChatInput  = document.getElementById('lobby-chat-input');
+const lobbyChatSend   = document.getElementById('lobby-chat-send');
+const serverListScreen  = document.getElementById('server-list-screen');
+const serverListEl      = document.getElementById('server-list');
+const serverListEmpty   = document.getElementById('server-list-empty');
+const serverListBack    = document.getElementById('server-list-back');
+const serverListRefresh = document.getElementById('server-list-refresh');
+const loadingScreen   = document.getElementById('loading-screen');
+const loadingText     = document.getElementById('loading-text');
+const loadingBar      = document.getElementById('loading-bar');
+const hud             = document.getElementById('hud');
+const hudCode         = document.getElementById('hud-code');
+const hudMap          = document.getElementById('hud-map');
+const hudPlayers      = document.getElementById('hud-players');
+const crosshair       = document.getElementById('crosshair');
+const lockMsg         = document.getElementById('lock-msg');
+const kickedOverlay   = document.getElementById('kicked-overlay');
+const kickedReason    = document.getElementById('kicked-reason');
+const kickedOkBtn     = document.getElementById('kicked-ok-btn');
+const gameChatEl      = document.getElementById('game-chat');
+const gameChatMsgs    = document.getElementById('game-chat-messages');
+const gameChatInputRow= document.getElementById('game-chat-input-row');
+const gameChatInput   = document.getElementById('game-chat-input');
+const gameChatSend    = document.getElementById('game-chat-send');
 
 // Socket — prefer websocket for speed
 const socket = io({ transports: ['websocket', 'polling'] });
@@ -303,6 +528,9 @@ let currentCode = null;
 let gameRunning = false;
 let lobbyPlayers = 1;
 let lobbyIsPublic = false;
+let isHost = false;
+let myName = '';
+let chatOpen = false;
 
 // Three.js globals
 let renderer, scene, camera;
@@ -324,6 +552,23 @@ const player = {
 const GRAVITY = -18;
 const keys = {};
 
+// ── Name assignment ───────────────────────────────────────────────────────────
+socket.on('assignedName', ({ name }) => {
+  myName = name;
+  nameInput.value = name;
+});
+
+nameSaveBtn.addEventListener('click', () => {
+  const newName = nameInput.value.trim().substring(0, 20);
+  if (!newName) return;
+  socket.emit('setName', { name: newName }, (res) => {
+    if (res && res.success) {
+      myName = res.name;
+      nameInput.value = res.name;
+    }
+  });
+});
+
 // Pointer lock
 let isLocked = false;
 document.addEventListener('pointerlockchange', () => {
@@ -340,26 +585,204 @@ document.addEventListener('mousemove', (e) => {
 
 // Keyboard
 document.addEventListener('keydown', (e) => {
+  // Don't capture game keys when chat is open; allow Escape through to close chat
+  if (chatOpen && e.code !== 'Escape') return;
+
   keys[e.code] = true;
   if (e.code === 'Space' && player.onGround) {
     player.vel.y = player.jumpSpeed;
     player.onGround = false;
   }
+  // Open in-game chat with T
+  if (e.code === 'KeyT' && gameRunning && !chatOpen) {
+    e.preventDefault();
+    openGameChat();
+  }
 });
-document.addEventListener('keyup', (e) => { keys[e.code] = false; });
+document.addEventListener('keyup', (e) => {
+  if (chatOpen && e.code === 'Escape') {
+    closeGameChat();
+    return;
+  }
+  keys[e.code] = false;
+});
+
+function openGameChat() {
+  chatOpen = true;
+  gameChatInputRow.classList.add('visible');
+  gameChatEl.classList.add('active');
+  gameChatInput.focus();
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+
+function closeGameChat() {
+  chatOpen = false;
+  gameChatInputRow.classList.remove('visible');
+  gameChatEl.classList.remove('active');
+  gameChatInput.value = '';
+}
+
+// ── Chat helpers ──────────────────────────────────────────────────────────────
+function appendChatMsg(container, { sender, text, system, pm }) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg' + (system ? ' system' : '') + (pm ? ' pm' : '');
+  if (system) {
+    div.textContent = text;
+  } else if (pm) {
+    div.innerHTML = '<span class="chat-sender">[PM] ' + escapeHtml(sender) + ':</span> ' + escapeHtml(text);
+  } else {
+    div.innerHTML = '<span class="chat-sender">' + escapeHtml(sender) + ':</span> ' + escapeHtml(text);
+  }
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(str) {
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+// Chat message from server
+socket.on('chatMessage', (msg) => {
+  if (gameRunning) {
+    appendChatMsg(gameChatMsgs, msg);
+  } else {
+    appendChatMsg(lobbyChatMsgs, msg);
+  }
+});
+
+// Lobby chat send
+function sendLobbyChat() {
+  const text = lobbyChatInput.value.trim();
+  if (!text) return;
+  socket.emit('sendChat', { text });
+  lobbyChatInput.value = '';
+}
+lobbyChatSend.addEventListener('click', sendLobbyChat);
+lobbyChatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendLobbyChat(); });
+
+// Game chat send
+function sendGameChat() {
+  const text = gameChatInput.value.trim();
+  if (!text) return;
+  socket.emit('sendChat', { text });
+  closeGameChat();
+}
+gameChatSend.addEventListener('click', sendGameChat);
+gameChatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendGameChat();
+  if (e.key === 'Escape') closeGameChat();
+  e.stopPropagation();
+});
+
+// ── Player list in lobby ──────────────────────────────────────────────────────
+socket.on('playerList', (list) => {
+  renderPlayerList(list);
+});
+
+function renderPlayerList(list) {
+  lobbyPlayerList.innerHTML = '';
+  lobbyPlayers = list.length;
+  playerCountEl.textContent = 'Players: ' + list.length + ' / 16';
+
+  list.forEach((p) => {
+    const item = document.createElement('div');
+    item.className = 'player-item';
+
+    const nameSpan = document.createElement('span');
+    nameSpan.className = 'player-name';
+    nameSpan.textContent = p.name;
+    if (p.isHost) {
+      const badge = document.createElement('span');
+      badge.className = 'player-host-badge';
+      badge.textContent = '★ HOST';
+      nameSpan.appendChild(badge);
+    }
+    item.appendChild(nameSpan);
+
+    const actions = document.createElement('span');
+    actions.className = 'player-item-actions';
+
+    // Don't show actions for yourself
+    if (p.id !== socket.id) {
+      if (isHost) {
+        // Admin: kick button
+        const kickBtn = document.createElement('button');
+        kickBtn.className = 'kick-btn';
+        kickBtn.textContent = 'KICK';
+        kickBtn.addEventListener('click', () => {
+          socket.emit('kickPlayer', { targetId: p.id }, (res) => {
+            if (res && !res.success) alert(res.error || 'Failed to kick');
+          });
+        });
+        actions.appendChild(kickBtn);
+      }
+      // Report button
+      const reportBtn = document.createElement('button');
+      reportBtn.textContent = 'REPORT';
+      reportBtn.addEventListener('click', () => {
+        socket.emit('reportPlayer', { targetId: p.id });
+      });
+      actions.appendChild(reportBtn);
+
+      // PM button
+      const pmBtn = document.createElement('button');
+      pmBtn.textContent = 'PM';
+      pmBtn.addEventListener('click', () => {
+        lobbyChatInput.value = '?send:' + p.name + ';';
+        lobbyChatInput.focus();
+      });
+      actions.appendChild(pmBtn);
+    }
+
+    item.appendChild(actions);
+    lobbyPlayerList.appendChild(item);
+  });
+}
+
+// ── Kicked handler ────────────────────────────────────────────────────────────
+socket.on('kicked', ({ reason }) => {
+  kickedReason.textContent = reason || 'You were kicked from the lobby.';
+  lobbyScreen.classList.remove('visible');
+  kickedOverlay.classList.add('visible');
+  currentCode = null;
+  currentMap = null;
+  isHost = false;
+});
+
+kickedOkBtn.addEventListener('click', () => {
+  kickedOverlay.classList.remove('visible');
+  menuEl.style.display = '';
+});
 
 // ── MENU ──────────────────────────────────────────────────────────────────────
 btnCreate.addEventListener('click', () => {
-  socket.emit('createLobby', { isPublic: false }, (res) => {
+  createDialog.classList.add('visible');
+});
+
+createCancelBtn.addEventListener('click', () => {
+  createDialog.classList.remove('visible');
+});
+
+createConfirmBtn.addEventListener('click', () => {
+  const selectedMap = createMapSelect.value;
+  createDialog.classList.remove('visible');
+  socket.emit('createLobby', { map: selectedMap, isPublic: false }, (res) => {
     if (!res.success) { alert('Could not create lobby.'); return; }
     currentCode  = res.code;
     currentMap   = res.map;
     lobbyPlayers = 1;
     lobbyIsPublic = false;
+    isHost = true;
     lobbyCodeEl.textContent = res.code;
     lobbyMapEl.textContent  = 'Map: ' + formatMapName(res.map);
+    lobbyMapSelect.value = res.map;
     playerCountEl.textContent = 'Players: 1 / 16';
     updateVisibilityBtn();
+    updateAdminUI();
+    lobbyChatMsgs.innerHTML = '';
+    if (res.playerList) renderPlayerList(res.playerList);
     menuEl.style.display = 'none';
     lobbyScreen.classList.add('visible');
   });
@@ -382,15 +805,45 @@ codeJoinBtn.addEventListener('click', () => {
   joinLobbyByCode(code);
 });
 
+// Quick Play
+btnQuickPlay.addEventListener('click', () => {
+  socket.emit('quickPlay', (res) => {
+    if (!res || !res.success) {
+      alert('Could not find or create a game. Try again.');
+      return;
+    }
+    currentCode  = res.code;
+    currentMap   = res.map;
+    isHost = !!res.isHost;
+    lobbyIsPublic = !!res.isPublic;
+    lobbyCodeEl.textContent = res.code;
+    lobbyMapEl.textContent  = 'Map: ' + formatMapName(res.map);
+    lobbyMapSelect.value = res.map;
+    playerCountEl.textContent = 'Players: ' + (res.playerList ? res.playerList.length : 1) + ' / 16';
+    updateVisibilityBtn();
+    updateAdminUI();
+    lobbyChatMsgs.innerHTML = '';
+    if (res.playerList) renderPlayerList(res.playerList);
+    if (res.existingPlayers) res.existingPlayers.forEach(remotePlayerJoined);
+    menuEl.style.display = 'none';
+    lobbyScreen.classList.add('visible');
+  });
+});
+
 function joinLobbyByCode(code) {
   socket.emit('joinLobby', { code }, (res) => {
     if (!res.success) { dialogError.textContent = res.error || 'Failed to join.'; return; }
     currentCode  = code;
     currentMap   = res.map;
-    lobbyPlayers = 1 + (res.existingPlayers ? res.existingPlayers.length : 0);
+    isHost = !!res.isHost;
+    lobbyPlayers = res.playerList ? res.playerList.length : (1 + (res.existingPlayers ? res.existingPlayers.length : 0));
     lobbyCodeEl.textContent = code;
     lobbyMapEl.textContent  = 'Map: ' + formatMapName(res.map);
+    lobbyMapSelect.value = res.map;
     playerCountEl.textContent = 'Players: ' + lobbyPlayers + ' / 16';
+    updateAdminUI();
+    lobbyChatMsgs.innerHTML = '';
+    if (res.playerList) renderPlayerList(res.playerList);
     if (res.existingPlayers) res.existingPlayers.forEach(remotePlayerJoined);
     codeDialog.classList.remove('visible');
     serverListScreen.classList.remove('visible');
@@ -399,7 +852,34 @@ function joinLobbyByCode(code) {
   });
 }
 
-// Visibility toggle (public/private)
+function updateAdminUI() {
+  if (isHost) {
+    adminControls.classList.add('visible');
+    mapSelectRow.classList.add('visible');
+  } else {
+    adminControls.classList.remove('visible');
+    mapSelectRow.classList.remove('visible');
+  }
+}
+
+// Map change in lobby (admin only)
+lobbyMapSelect.addEventListener('change', () => {
+  socket.emit('changeMap', { map: lobbyMapSelect.value }, (res) => {
+    if (res && res.success) {
+      currentMap = res.map;
+      lobbyMapEl.textContent = 'Map: ' + formatMapName(res.map);
+    }
+  });
+});
+
+// Server broadcast of map change
+socket.on('mapChanged', ({ map }) => {
+  currentMap = map;
+  lobbyMapEl.textContent = 'Map: ' + formatMapName(map);
+  lobbyMapSelect.value = map;
+});
+
+// Visibility toggle (public/private) — admin only
 visibilityBtn.addEventListener('click', () => {
   lobbyIsPublic = !lobbyIsPublic;
   socket.emit('toggleVisibility', { isPublic: lobbyIsPublic }, () => {});
@@ -416,12 +896,14 @@ function updateVisibilityBtn() {
   }
 }
 
-// Start game — broadcast to all lobby members via server
+// Start game — admin only
 startBtn.addEventListener('click', () => {
-  socket.emit('startGame', () => {});
+  socket.emit('startGame', (res) => {
+    if (res && !res.success && res.error) alert(res.error);
+  });
 });
 
-// Listen for game start broadcast from server (triggered by any player clicking start)
+// Listen for game start broadcast from server
 socket.on('gameStart', ({ map, code }) => {
   if (gameRunning) return;
   currentMap = map;
@@ -452,8 +934,12 @@ function refreshServerList() {
     list.forEach((lobby) => {
       const item = document.createElement('div');
       item.className = 'server-item';
+      const statusText = lobby.started ? 'In Progress' : 'Waiting';
       item.innerHTML =
+        '<div class="server-item-info">' +
         '<span class="server-item-map">' + formatMapName(lobby.map) + '</span>' +
+        '<span class="server-item-status">' + statusText + '</span>' +
+        '</div>' +
         '<span class="server-item-players">' + lobby.playerCount + ' / ' + lobby.maxPlayers + '</span>';
       item.addEventListener('click', () => joinLobbyByCode(lobby.code));
       serverListEl.appendChild(item);
@@ -519,16 +1005,23 @@ async function startGame(mapName, code) {
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87ceeb);
-  scene.fog = new THREE.Fog(0x87ceeb, 60, 200);
 
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 300);
+  // Reduce fog distance on arabic map for performance
+  const fogNear = mapName === 'arabic_city' ? 40 : 60;
+  const fogFar  = mapName === 'arabic_city' ? 120 : 200;
+  scene.fog = new THREE.Fog(0x87ceeb, fogNear, fogFar);
+
+  const cameraFar = mapName === 'arabic_city' ? 150 : 300;
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, cameraFar);
 
   // Lighting
   scene.add(new THREE.AmbientLight(0xffffff, 0.8));
   const sun = new THREE.DirectionalLight(0xffffff, 1.0);
   sun.position.set(50, 100, 50);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(512, 512);
+  // Reduce shadow map size on arabic map for performance
+  const shadowSize = mapName === 'arabic_city' ? 256 : 512;
+  sun.shadow.mapSize.set(shadowSize, shadowSize);
   sun.shadow.camera.near = 0.5;
   sun.shadow.camera.far  = 200;
   sun.shadow.camera.left = sun.shadow.camera.bottom = -80;
@@ -560,12 +1053,15 @@ async function startGame(mapName, code) {
   gameRunning = true;
 
   window.addEventListener('resize', onResize);
-  renderer.domElement.addEventListener('click', () => renderer.domElement.requestPointerLock());
+  renderer.domElement.addEventListener('click', () => {
+    if (!chatOpen) renderer.domElement.requestPointerLock();
+  });
 
   animate();
 }
 
 function loadMap(mapName) {
+  const isArabMap = mapName === 'arabic_city';
   return new Promise((resolve) => {
     const loader = new GLTFLoader();
     loader.load(
@@ -600,8 +1096,10 @@ function loadMap(mapName) {
                     'spawn y:', (size.y + player.height + 3).toFixed(2));
 
         // ── Step 5: convert PBR materials → Lambert (works in all WebGL modes)──
+        let meshCount = 0;
         root.traverse((node) => {
           if (!node.isMesh) return;
+          meshCount++;
 
           // Convert material(s) to MeshLambertMaterial for compatibility
           const mats = Array.isArray(node.material) ? node.material : [node.material];
@@ -623,11 +1121,19 @@ function loadMap(mapName) {
           });
           node.material = converted.length === 1 ? converted[0] : converted;
 
-          node.castShadow    = true;
-          node.receiveShadow = true;
+          // Performance: disable shadows on arab map small meshes to reduce draw calls
+          if (isArabMap) {
+            node.castShadow    = false;
+            node.receiveShadow = true;
+          } else {
+            node.castShadow    = true;
+            node.receiveShadow = true;
+          }
           node.frustumCulled = true;
           collidables.push(node);
         });
+
+        console.log('[Map] mesh count:', meshCount, isArabMap ? '(shadows disabled for perf)' : '');
 
         // ── Step 6: find multiple spawn points across the map ──────────────────
         {
