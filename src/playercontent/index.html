@@ -4,12 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BaiterFPS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a0a0f; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+    body { background: #0a0a0f; color: #fff; font-family: 'Inter', 'Segoe UI', sans-serif; overflow: hidden; }
     canvas { display: block; }
-    button { font-family: 'Segoe UI', sans-serif; letter-spacing: 0.03em; }
-    input, select { font-family: 'Segoe UI', sans-serif; }
+    button { font-family: 'Inter', 'Segoe UI', sans-serif; letter-spacing: 0.03em; }
+    input, select { font-family: 'Inter', 'Segoe UI', sans-serif; }
 
     #menu {
       position: fixed; inset: 0;
@@ -31,13 +35,14 @@
     #name-input {
       background: #111; border: 1px solid #444; color: #fff;
       padding: 0.5rem 0.8rem; font-size: 1rem; outline: none;
-      width: 180px;
+      width: 180px; border-radius: 4px;
     }
     #name-input:focus { border-color: #e63946; }
     #name-save {
       padding: 0.5rem 1rem; background: transparent;
       border: 1.5px solid #e63946; color: #fff;
       cursor: pointer; font-size: 0.9rem;
+      border-radius: 4px;
       transition: background 0.15s;
     }
     #name-save:hover { background: #e63946; }
@@ -48,6 +53,7 @@
       border: 2px solid #e63946;
       color: #fff; font-size: 1.2rem;
       cursor: pointer; letter-spacing: 0.05em;
+      border-radius: 4px;
       transition: background 0.2s, box-shadow 0.2s;
     }
     .menu-btn:hover {
@@ -78,20 +84,20 @@
     .dialog-box {
       background: #0d1b2a; border: 2px solid #e63946;
       padding: 2.5rem 3rem; display: flex; flex-direction: column; gap: 1rem;
-      min-width: 320px;
+      min-width: 320px; border-radius: 6px;
     }
     .dialog-box h2 { color: #e63946; font-size: 1.5rem; }
     .dialog-box input {
       background: #111; border: 1px solid #444; color: #fff;
       padding: 0.7rem 1rem; font-size: 1.3rem; letter-spacing: 0.15em;
-      text-transform: uppercase; outline: none;
+      text-transform: uppercase; outline: none; border-radius: 4px;
     }
     .dialog-box input:focus { border-color: #e63946; }
     .dialog-box label { color: #aaa; font-size: 1rem; margin-bottom: 0.2rem; }
     .dialog-box select {
       background: #111; border: 1px solid #444; color: #fff;
       padding: 0.7rem 1rem; font-size: 1.1rem; outline: none;
-      cursor: pointer;
+      cursor: pointer; border-radius: 4px;
     }
     .dialog-box select:focus { border-color: #e63946; }
     .dialog-row { display: flex; gap: 0.5rem; }
@@ -99,6 +105,7 @@
       flex: 1; padding: 0.7rem;
       background: transparent; border: 1.5px solid #e63946;
       color: #fff; cursor: pointer; font-size: 1rem;
+      border-radius: 4px;
       transition: background 0.15s;
     }
     .dialog-row button:hover { background: #e63946; }
@@ -118,7 +125,7 @@
       font-size: 2.5rem; font-weight: 900; letter-spacing: 0.3em;
       color: #fff; background: #111; padding: 0.5rem 1.5rem;
       border: 2px solid #e63946; margin-bottom: 0.5rem;
-      display: inline-block;
+      display: inline-block; border-radius: 4px;
     }
     #lobby-code-row {
       display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;
@@ -127,6 +134,7 @@
       padding: 0.5rem 1rem; background: transparent;
       border: 1.5px solid #e63946; color: #fff;
       cursor: pointer; font-size: 0.9rem;
+      border-radius: 4px;
       transition: background 0.15s;
     }
     #copy-code-btn:hover { background: #e63946; }
@@ -140,7 +148,7 @@
     #lobby-map-select {
       background: #111; border: 1px solid #444; color: #fff;
       padding: 0.4rem 0.8rem; font-size: 1rem; outline: none;
-      cursor: pointer;
+      cursor: pointer; border-radius: 4px;
     }
     #player-count { color: #aaa; font-size: 1rem; margin-bottom: 0.5rem; }
 
@@ -152,7 +160,7 @@
     .player-item {
       display: flex; justify-content: space-between; align-items: center;
       background: #111; border: 1px solid #333; padding: 0.5rem 1rem;
-      font-size: 0.95rem;
+      font-size: 0.95rem; border-radius: 4px;
     }
     .player-item .player-name { color: #fff; }
     .player-item .player-host-badge {
@@ -162,7 +170,8 @@
     .player-item-actions button {
       padding: 0.3rem 0.6rem; font-size: 0.8rem;
       background: transparent; border: 1px solid #555;
-      color: #ccc; cursor: pointer; transition: background 0.15s, border-color 0.15s;
+      color: #ccc; cursor: pointer; border-radius: 3px;
+      transition: background 0.15s, border-color 0.15s;
     }
     .player-item-actions button:hover { border-color: #e63946; color: #fff; }
     .player-item-actions button.kick-btn { border-color: #e63946; color: #e63946; }
@@ -177,6 +186,7 @@
       width: 220px; padding: 0.7rem;
       background: transparent; border: 1.5px solid #e63946;
       color: #fff; font-size: 1rem; cursor: pointer;
+      border-radius: 4px;
       transition: background 0.15s;
     }
     #visibility-toggle:hover { background: #e6394644; }
@@ -185,6 +195,7 @@
       width: 220px; padding: 1rem;
       background: #e63946; border: none;
       color: #fff; font-size: 1.2rem; cursor: pointer;
+      border-radius: 4px;
       transition: box-shadow 0.2s;
     }
     #start-btn:hover { box-shadow: 0 0 20px #e63946; }
@@ -198,7 +209,7 @@
     #lobby-chat-messages {
       background: #0a0a12; border: 1px solid #333;
       height: 140px; overflow-y: auto; padding: 0.5rem;
-      font-size: 0.85rem; color: #ccc;
+      font-size: 0.85rem; color: #ccc; border-radius: 4px;
     }
     .chat-msg { margin-bottom: 0.2rem; }
     .chat-msg.system { color: #888; font-style: italic; }
@@ -210,11 +221,13 @@
     #lobby-chat-input {
       flex: 1; background: #111; border: 1px solid #444;
       color: #fff; padding: 0.5rem; font-size: 0.9rem; outline: none;
+      border-radius: 4px;
     }
     #lobby-chat-input:focus { border-color: #e63946; }
     #lobby-chat-send {
       padding: 0.5rem 1rem; background: #e63946; border: none;
       color: #fff; cursor: pointer; font-size: 0.9rem;
+      border-radius: 4px;
     }
 
     /* In-game chat */
@@ -227,6 +240,7 @@
       background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
       height: 120px; overflow-y: auto; padding: 0.5rem;
       font-size: 0.8rem; color: #ccc; pointer-events: auto;
+      border-radius: 4px;
     }
     #game-chat-input-row {
       display: none; gap: 0.3rem; margin-top: 0.3rem;
@@ -235,10 +249,12 @@
     #game-chat-input {
       flex: 1; background: rgba(0,0,0,0.7); border: 1px solid #555;
       color: #fff; padding: 0.4rem; font-size: 0.85rem; outline: none;
+      border-radius: 4px;
     }
     #game-chat-send {
       padding: 0.4rem 0.8rem; background: #e63946; border: none;
       color: #fff; cursor: pointer; font-size: 0.85rem;
+      border-radius: 4px;
     }
 
     #server-list-screen {
@@ -259,7 +275,8 @@
     .server-item {
       display: flex; justify-content: space-between; align-items: center;
       background: #111; border: 1px solid #333; padding: 1rem 1.5rem;
-      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+      cursor: pointer; border-radius: 4px;
+      transition: border-color 0.15s, background 0.15s;
     }
     .server-item:hover { border-color: #e63946; background: #1a1a2e; }
     .server-item-info { display: flex; flex-direction: column; }
@@ -271,6 +288,7 @@
       width: 200px; padding: 0.8rem;
       background: transparent; border: 1.5px solid #e63946;
       color: #fff; font-size: 1rem; cursor: pointer;
+      border-radius: 4px;
       transition: background 0.15s; margin-bottom: 2rem;
     }
     #server-list-back:hover { background: #e63946; }
@@ -278,6 +296,7 @@
       width: 200px; padding: 0.8rem;
       background: transparent; border: 1.5px solid #4caf50;
       color: #4caf50; font-size: 1rem; cursor: pointer;
+      border-radius: 4px;
       transition: background 0.15s; margin-bottom: 1rem;
     }
     #server-list-refresh:hover { background: #4caf5044; }
@@ -348,6 +367,7 @@
       width: 220px; padding: 0.7rem;
       background: transparent; border: 1.5px solid #888;
       color: #aaa; font-size: 1rem; cursor: pointer;
+      border-radius: 4px;
       transition: background 0.15s, border-color 0.15s;
       margin-top: 0.5rem;
     }
@@ -367,6 +387,7 @@
       margin: 0.4rem 0;
       background: transparent; border: 1.5px solid #e63946;
       color: #fff; font-size: 1rem; cursor: pointer;
+      border-radius: 4px;
       transition: background 0.15s;
     }
     .pause-btn:hover { background: #e63946; }
@@ -380,7 +401,7 @@
       display: none; flex-direction: column;
       background: rgba(10,15,30,0.95); border: 2px solid #e63946;
       padding: 1.5rem 2rem; min-width: 320px; max-width: 500px;
-      z-index: 20;
+      z-index: 20; border-radius: 6px;
     }
     #tab-player-overlay.visible { display: flex; }
     #tab-player-overlay h3 {
@@ -410,7 +431,7 @@
   <button class="menu-btn" id="btn-create">CREATE LOBBY</button>
   <button class="menu-btn" id="btn-enter">ENTER CODE</button>
   <button class="menu-btn" id="btn-servers">SERVER LIST</button>
-  <button class="menu-btn quick-play" id="btn-quickplay">⚡ QUICK PLAY</button>
+  <button class="menu-btn quick-play" id="btn-quickplay"><i class="ti ti-bolt"></i> QUICK PLAY</button>
 </div>
 
 <!-- Create Lobby Dialog (map selection) -->
@@ -420,7 +441,6 @@
     <label>Select Map</label>
     <select id="create-map-select">
       <option value="arabic_city">Arabic City</option>
-      <option value="snow_town">Snow Town</option>
     </select>
     <div class="dialog-row">
       <button id="create-confirm-btn">CREATE</button>
@@ -456,14 +476,13 @@
   <h2>LOBBY</h2>
   <div id="lobby-code-row">
     <div id="lobby-code-display">------</div>
-    <button id="copy-code-btn" title="Copy lobby code">📋 COPY</button>
+    <button id="copy-code-btn" title="Copy lobby code"><i class="ti ti-clipboard"></i> COPY</button>
   </div>
   <div id="lobby-map-display">Map: -</div>
   <div id="map-select-row">
     <label>Change Map:</label>
     <select id="lobby-map-select">
       <option value="arabic_city">Arabic City</option>
-      <option value="snow_town">Snow Town</option>
     </select>
   </div>
   <div id="player-count">Players: 1 / 16</div>
@@ -752,6 +771,15 @@ function exitGame() {
   gameChatInputRow.classList.remove('visible');
   gameChatMsgs.innerHTML = '';
   tabPlayerOverlay.classList.remove('visible');
+  // Dispose remote player meshes to free GPU memory
+  for (const id of Object.keys(otherPlayerMeshes)) {
+    const mesh = otherPlayerMeshes[id];
+    if (mesh) {
+      if (scene) scene.remove(mesh);
+      if (mesh.geometry) mesh.geometry.dispose();
+      if (mesh.material) mesh.material.dispose();
+    }
+  }
   if (renderer && renderer.domElement && renderer.domElement.parentNode) {
     renderer.domElement.parentNode.removeChild(renderer.domElement);
   }
@@ -786,7 +814,7 @@ function showTabPlayerList() {
     const item = document.createElement('div');
     item.className = 'tab-player-item';
     let html = '<span class="tab-player-name">' + escapeHtml(p.name) + '</span>';
-    if (p.isHost) html += '<span class="tab-player-host">★ HOST</span>';
+    if (p.isHost) html += '<span class="tab-player-host"><i class="ti ti-star-filled"></i> HOST</span>';
     item.innerHTML = html;
     tabPlayerList.appendChild(item);
   });
@@ -797,11 +825,11 @@ function showTabPlayerList() {
 copyCodeBtn.addEventListener('click', () => {
   if (!currentCode) return;
   navigator.clipboard.writeText(currentCode).then(() => {
-    copyCodeBtn.textContent = '✓ COPIED';
-    setTimeout(() => { copyCodeBtn.textContent = '📋 COPY'; }, 1500);
+    copyCodeBtn.innerHTML = '<i class="ti ti-check"></i> COPIED';
+    setTimeout(() => { copyCodeBtn.innerHTML = '<i class="ti ti-clipboard"></i> COPY'; }, 1500);
   }).catch(() => {
-    copyCodeBtn.textContent = '✗ FAILED';
-    setTimeout(() => { copyCodeBtn.textContent = '📋 COPY'; }, 1500);
+    copyCodeBtn.innerHTML = '<i class="ti ti-x"></i> FAILED';
+    setTimeout(() => { copyCodeBtn.innerHTML = '<i class="ti ti-clipboard"></i> COPY'; }, 1500);
   });
 });
 
@@ -869,10 +897,7 @@ gameChatInput.addEventListener('keydown', (e) => {
 });
 
 // ── Player list in lobby ──────────────────────────────────────────────────────
-socket.on('playerList', (list) => {
-  cachedPlayerList = list;
-  renderPlayerList(list);
-});
+// playerList handler is registered in the multiplayer section below
 
 function renderPlayerList(list) {
   lobbyPlayerList.innerHTML = '';
@@ -889,7 +914,7 @@ function renderPlayerList(list) {
     if (p.isHost) {
       const badge = document.createElement('span');
       badge.className = 'player-host-badge';
-      badge.textContent = '★ HOST';
+      badge.innerHTML = '<i class="ti ti-star-filled"></i> HOST';
       nameSpan.appendChild(badge);
     }
     item.appendChild(nameSpan);
@@ -1154,8 +1179,18 @@ socket.on('playerJoined', (p) => {
 socket.on('playerLeft', ({ id }) => {
   lobbyPlayers = Math.max(1, lobbyPlayers - 1);
   playerCountEl.textContent = 'Players: ' + lobbyPlayers + ' / 16';
-  if (otherPlayerMeshes[id]) { scene.remove(otherPlayerMeshes[id]); delete otherPlayerMeshes[id]; }
+  removeRemotePlayer(id);
 });
+
+function removeRemotePlayer(id) {
+  const mesh = otherPlayerMeshes[id];
+  if (mesh) {
+    if (scene) scene.remove(mesh);
+    if (mesh.geometry) mesh.geometry.dispose();
+    if (mesh.material) mesh.material.dispose();
+    delete otherPlayerMeshes[id];
+  }
+}
 
 socket.on('playerMoved', ({ id, x, y, z, yaw }) => {
   if (!gameRunning) return;
@@ -1163,6 +1198,21 @@ socket.on('playerMoved', ({ id, x, y, z, yaw }) => {
   if (!mesh) { mesh = createPlayerCube(); scene.add(mesh); otherPlayerMeshes[id] = mesh; }
   mesh.position.set(x, y, z);
   mesh.rotation.y = yaw;
+});
+
+// Sync player list: remove meshes for players no longer in the lobby
+socket.on('playerList', (list) => {
+  cachedPlayerList = list;
+  renderPlayerList(list);
+  // Clean up meshes for players that are no longer in the list
+  if (gameRunning) {
+    const activeIds = new Set(list.map(p => p.id));
+    for (const id of Object.keys(otherPlayerMeshes)) {
+      if (!activeIds.has(id)) {
+        removeRemotePlayer(id);
+      }
+    }
+  }
 });
 
 function remotePlayerJoined(p) {
@@ -1174,10 +1224,12 @@ function remotePlayerJoined(p) {
   otherPlayerMeshes[p.id] = mesh;
 }
 
+// Shared geometry/material for player cubes to reduce GPU memory
+const _playerGeo = new THREE.BoxGeometry(0.8, 1.8, 0.8);
+const _playerMat = new THREE.MeshLambertMaterial({ color: 0xe63946 });
+
 function createPlayerCube() {
-  const geo = new THREE.BoxGeometry(0.8, 1.8, 0.8);
-  const mat = new THREE.MeshLambertMaterial({ color: 0xe63946 });
-  return new THREE.Mesh(geo, mat);
+  return new THREE.Mesh(_playerGeo, _playerMat);
 }
 
 // ── START GAME ────────────────────────────────────────────────────────────────
@@ -1192,33 +1244,23 @@ async function startGame(mapName, code) {
   renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(maxPixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = mapName !== 'arabic_city';
+  renderer.shadowMap.enabled = false;
   renderer.shadowMap.type = THREE.PCFShadowMap;
   document.body.appendChild(renderer.domElement);
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87ceeb);
 
-  // Reduce fog distance on arabic map for performance
-  const fogNear = mapName === 'arabic_city' ? 40 : 60;
-  const fogFar  = mapName === 'arabic_city' ? 120 : 200;
-  scene.fog = new THREE.Fog(0x87ceeb, fogNear, fogFar);
+  // Fog for distance culling
+  scene.fog = new THREE.Fog(0x87ceeb, 40, 120);
 
-  const cameraFar = mapName === 'arabic_city' ? 150 : 300;
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, cameraFar);
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 150);
 
   // Lighting
   scene.add(new THREE.AmbientLight(0xffffff, 0.8));
   const sun = new THREE.DirectionalLight(0xffffff, 1.0);
   sun.position.set(50, 100, 50);
-  sun.castShadow = true;
-  // Reduce shadow map size on arabic map for performance
-  const shadowSize = mapName === 'arabic_city' ? 256 : 512;
-  sun.shadow.mapSize.set(shadowSize, shadowSize);
-  sun.shadow.camera.near = 0.5;
-  sun.shadow.camera.far  = 200;
-  sun.shadow.camera.left = sun.shadow.camera.bottom = -80;
-  sun.shadow.camera.right = sun.shadow.camera.top   =  80;
+  sun.castShadow = false;
   scene.add(sun);
 
   // Fallback ground — kept slightly below y=0 to avoid z-fighting with map floor
@@ -1254,7 +1296,6 @@ async function startGame(mapName, code) {
 }
 
 function loadMap(mapName) {
-  const isArabMap = mapName === 'arabic_city';
   return new Promise((resolve) => {
     const loader = new GLTFLoader();
     loader.load(
@@ -1316,9 +1357,9 @@ function loadMap(mapName) {
           });
           node.material = converted.length === 1 ? converted[0] : converted;
 
-          // Disable shadows on arab map entirely for performance
-          node.castShadow    = !isArabMap;
-          node.receiveShadow = true;
+          // Shadows disabled for performance
+          node.castShadow    = false;
+          node.receiveShadow = false;
           node.frustumCulled = true;
 
           // Collect geometry for merged collision mesh
@@ -1359,8 +1400,7 @@ function loadMap(mapName) {
           }
         }
 
-        console.log('[Map] mesh count:', meshCount, isArabMap ? '(shadows disabled for perf)' : '',
-                    'collidables:', collidables.length);
+        console.log('[Map] mesh count:', meshCount, 'collidables:', collidables.length);
 
         // ── Step 6: find multiple spawn points across the map ──────────────────
         {
@@ -1457,38 +1497,48 @@ const wallDirs = [
   new THREE.Vector3(-diag, 0, -diag),
 ];
 const moveEuler = new THREE.Euler(0, 0, 0);
+// Pre-allocated vectors to avoid per-frame garbage collection
+const _moveVec = new THREE.Vector3();
+const _nextPos = new THREE.Vector3();
+const _rayOrigin = new THREE.Vector3();
+const _wallOrigin = new THREE.Vector3();
+const wallCheckHeights = [0.3, 0.9, 1.5];
 
 function updatePhysics(dt) {
   if (!player.onGround) player.vel.y += GRAVITY * dt;
 
   // Horizontal movement
   moveEuler.y = player.yaw;
-  const move = new THREE.Vector3();
-  if (keys['KeyW']) move.z -= 1;
-  if (keys['KeyS']) move.z += 1;
-  if (keys['KeyA']) move.x -= 1;
-  if (keys['KeyD']) move.x += 1;
-  if (move.lengthSq() > 0) {
-    move.normalize().applyEuler(moveEuler);
-    player.vel.x = move.x * player.speed;
-    player.vel.z = move.z * player.speed;
+  _moveVec.set(0, 0, 0);
+  if (keys['KeyW']) _moveVec.z -= 1;
+  if (keys['KeyS']) _moveVec.z += 1;
+  if (keys['KeyA']) _moveVec.x -= 1;
+  if (keys['KeyD']) _moveVec.x += 1;
+  if (_moveVec.lengthSq() > 0) {
+    _moveVec.normalize().applyEuler(moveEuler);
+    player.vel.x = _moveVec.x * player.speed;
+    player.vel.z = _moveVec.z * player.speed;
   } else {
     player.vel.x *= 0.82;
     player.vel.z *= 0.82;
   }
 
-  const next = player.pos.clone().addScaledVector(player.vel, dt);
+  _nextPos.copy(player.pos).addScaledVector(player.vel, dt);
 
-  // Ground collision — cast from slightly above feet, tolerance must exceed the offset
-  const groundOffset = 0.3;
-  downRay.set(new THREE.Vector3(next.x, next.y + groundOffset, next.z), downDir);
-  downRay.far = player.height + 1.0;
+  // Clamp max fall speed to prevent tunneling through floors
+  if (player.vel.y < -30) player.vel.y = -30;
+
+  // Ground collision — cast from above feet with generous tolerance
+  const groundOffset = 0.5;
+  _rayOrigin.set(_nextPos.x, _nextPos.y + groundOffset, _nextPos.z);
+  downRay.set(_rayOrigin, downDir);
+  downRay.far = player.height + 1.5;
   const groundHits = downRay.intersectObjects(collidables, true);
-  if (groundHits.length > 0 && groundHits[0].distance <= player.height + groundOffset + 0.1) {
+  if (groundHits.length > 0 && groundHits[0].distance <= player.height + groundOffset + 0.15) {
     const groundY = groundHits[0].point.y + player.height;
     // Only snap when falling or very close to ground (prevents upward jitter)
-    if (player.vel.y <= 0 || Math.abs(next.y - groundY) < 0.3) {
-      next.y = groundY;
+    if (player.vel.y <= 0 || Math.abs(_nextPos.y - groundY) < 0.4) {
+      _nextPos.y = groundY;
       player.vel.y = 0;
       player.onGround = true;
     }
@@ -1497,25 +1547,24 @@ function updatePhysics(dt) {
   }
 
   // Wall collision — check at multiple heights and 8 directions for robust blocking
-  const wallCheckHeights = [0.3, 0.9, 1.5];
   for (const h of wallCheckHeights) {
-    const wallOrigin = new THREE.Vector3(next.x, next.y - player.height + h, next.z);
+    _wallOrigin.set(_nextPos.x, _nextPos.y - player.height + h, _nextPos.z);
     for (const dir of wallDirs) {
-      wallRay.set(wallOrigin, dir);
-      wallRay.far = player.radius + 0.1;
+      wallRay.set(_wallOrigin, dir);
+      wallRay.far = player.radius + 0.15;
       const hits = wallRay.intersectObjects(collidables, true);
       if (hits.length > 0) {
-        const overlap = (player.radius + 0.1) - hits[0].distance;
-        next.x -= dir.x * overlap;
-        next.z -= dir.z * overlap;
+        const overlap = (player.radius + 0.15) - hits[0].distance;
+        _nextPos.x -= dir.x * overlap;
+        _nextPos.z -= dir.z * overlap;
       }
     }
   }
 
-  // Floor safety net
-  if (next.y < player.height) { next.y = player.height; player.vel.y = 0; player.onGround = true; }
+  // Floor safety net — prevent clipping through floor
+  if (_nextPos.y < player.height) { _nextPos.y = player.height; player.vel.y = 0; player.onGround = true; }
 
-  player.pos.copy(next);
+  player.pos.copy(_nextPos);
 }
 
 // ── RENDER LOOP ───────────────────────────────────────────────────────────────
