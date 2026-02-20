@@ -43,7 +43,15 @@ function generateRandomName() {
 // ── Swear word filter ─────────────────────────────────────────────────────────
 const SWEAR_WORDS = [
   'fuck','shit','ass','bitch','damn','crap','dick','bastard','cunt','piss',
-  'slut','whore','cock','twat','wank','bollocks','arse','nigger','fag','retard'
+  'slut','whore','cock','twat','wank','bollocks','arse','nigger','fag','retard',
+  'stfu','gtfo','dumbass','jackass','asshole','arsehole',
+  'motherfucker','fucker','fucking','shitty','bullshit','horseshit','dipshit',
+  'prick','douche','douchebag','skank','tramp','thot','incel',
+  'spaz','spastic',
+  'kys','kms','negro','chink','spic','wetback','cracker',
+  'honky','gook','kike','beaner','coon','darkie','paki','raghead','towelhead',
+  'dyke','lesbo','tranny','shemale','dildo','wanker','tosser','bellend',
+  'nonce','minger','bugger','sodoff','pissoff'
 ];
 
 function filterSwearWords(text) {
