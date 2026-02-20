@@ -14,7 +14,7 @@ const io = new Server(server, {
 
 const PORT = process.env.PORT || 3000;
 const MAX_PLAYERS = 16;
-const MAPS = ['arabic_city', 'snow_town'];
+const MAPS = ['arabic_city'];
 
 // Serve static files with compression headers
 app.use(express.static(path.join(__dirname, 'src/playercontent'), { maxAge: '1h' }));
