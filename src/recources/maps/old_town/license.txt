@@ -1,0 +1,8 @@
+Model Information:
+* title:	Old town
+* source:	https://sketchfab.com/3d-models/old-town-15a5d476f79d467992655683a9a56009
+* author:	Pasha (https://sketchfab.com/perga8-hAwguf-hybwup)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works
