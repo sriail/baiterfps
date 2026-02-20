@@ -116,7 +116,18 @@
       font-size: 2.5rem; font-weight: 900; letter-spacing: 0.3em;
       color: #fff; background: #111; padding: 0.5rem 1.5rem;
       border: 2px solid #e63946; margin-bottom: 0.5rem;
+      display: inline-block;
     }
+    #lobby-code-row {
+      display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;
+    }
+    #copy-code-btn {
+      padding: 0.5rem 1rem; background: transparent;
+      border: 1.5px solid #e63946; color: #fff;
+      cursor: pointer; font-size: 0.9rem;
+      transition: background 0.15s;
+    }
+    #copy-code-btn:hover { background: #e63946; }
     #lobby-map-display { color: #aaa; font-size: 1.1rem; margin-bottom: 0.3rem; }
     #map-select-row {
       display: none; align-items: center; gap: 0.5rem;
@@ -329,6 +340,59 @@
     #kicked-overlay.visible { display: flex; }
     #kicked-overlay .dialog-box { text-align: center; }
     #kicked-overlay p { color: #ff6b6b; font-size: 1.2rem; margin-bottom: 1rem; }
+
+    /* Back button in lobby */
+    #lobby-back-btn {
+      width: 220px; padding: 0.7rem;
+      background: transparent; border: 1.5px solid #888;
+      color: #aaa; font-size: 1rem; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      margin-top: 0.5rem;
+    }
+    #lobby-back-btn:hover { border-color: #e63946; color: #fff; }
+
+    /* Pause menu */
+    #pause-overlay {
+      position: fixed; inset: 0;
+      display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.8); z-index: 25;
+    }
+    #pause-overlay.visible { display: flex; }
+    #pause-overlay .dialog-box { text-align: center; min-width: 280px; }
+    #pause-overlay h2 { margin-bottom: 0.5rem; }
+    .pause-btn {
+      width: 100%; padding: 0.8rem;
+      margin: 0.4rem 0;
+      background: transparent; border: 1.5px solid #e63946;
+      color: #fff; font-size: 1rem; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .pause-btn:hover { background: #e63946; }
+    .pause-btn.secondary { border-color: #888; color: #aaa; }
+    .pause-btn.secondary:hover { border-color: #e63946; color: #fff; background: #e6394644; }
+
+    /* Tab player list popup */
+    #tab-player-overlay {
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      display: none; flex-direction: column;
+      background: rgba(10,15,30,0.95); border: 2px solid #e63946;
+      padding: 1.5rem 2rem; min-width: 320px; max-width: 500px;
+      z-index: 20;
+    }
+    #tab-player-overlay.visible { display: flex; }
+    #tab-player-overlay h3 {
+      color: #e63946; font-size: 1.3rem; margin-bottom: 0.8rem;
+      text-align: center; letter-spacing: 0.05em;
+    }
+    .tab-player-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.4rem 0.6rem; border-bottom: 1px solid #222;
+      font-size: 0.95rem;
+    }
+    .tab-player-item:last-child { border-bottom: none; }
+    .tab-player-name { color: #fff; }
+    .tab-player-host { color: #e63946; font-size: 0.8rem; margin-left: 0.5rem; }
   </style>
 </head>
 <body>
@@ -388,7 +452,10 @@
 <!-- Lobby Waiting Screen -->
 <div id="lobby-screen">
   <h2>LOBBY</h2>
-  <div id="lobby-code-display">------</div>
+  <div id="lobby-code-row">
+    <div id="lobby-code-display">------</div>
+    <button id="copy-code-btn" title="Copy lobby code">📋 COPY</button>
+  </div>
   <div id="lobby-map-display">Map: -</div>
   <div id="map-select-row">
     <label>Change Map:</label>
@@ -403,6 +470,7 @@
     <button id="visibility-toggle">PRIVATE</button>
     <button id="start-btn">START GAME</button>
   </div>
+  <button id="lobby-back-btn">← BACK</button>
   <div id="lobby-chat">
     <div id="lobby-chat-messages"></div>
     <div id="lobby-chat-input-row">
@@ -447,6 +515,23 @@
   </div>
 </div>
 
+<!-- Pause Menu -->
+<div id="pause-overlay">
+  <div class="dialog-box">
+    <h2>PAUSED</h2>
+    <button class="pause-btn" id="pause-resume-btn">RESUME</button>
+    <button class="pause-btn secondary" id="pause-lobby-btn">EXIT TO LOBBY</button>
+    <button class="pause-btn secondary" id="pause-home-btn">EXIT TO HOME</button>
+    <button class="pause-btn secondary" id="pause-settings-btn" disabled>SETTINGS (COMING SOON)</button>
+  </div>
+</div>
+
+<!-- Tab Player List Overlay -->
+<div id="tab-player-overlay">
+  <h3>PLAYERS</h3>
+  <div id="tab-player-list"></div>
+</div>
+
 <!-- Three.js + Socket.io -->
 <script src="/socket.io/socket.io.js"></script>
 <script type="importmap">
@@ -460,6 +545,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // Service Worker for asset caching
 if ('serviceWorker' in navigator) {
@@ -518,6 +604,14 @@ const gameChatMsgs    = document.getElementById('game-chat-messages');
 const gameChatInputRow= document.getElementById('game-chat-input-row');
 const gameChatInput   = document.getElementById('game-chat-input');
 const gameChatSend    = document.getElementById('game-chat-send');
+const copyCodeBtn     = document.getElementById('copy-code-btn');
+const lobbyBackBtn    = document.getElementById('lobby-back-btn');
+const pauseOverlay    = document.getElementById('pause-overlay');
+const pauseResumeBtn  = document.getElementById('pause-resume-btn');
+const pauseLobbyBtn   = document.getElementById('pause-lobby-btn');
+const pauseHomeBtn    = document.getElementById('pause-home-btn');
+const tabPlayerOverlay = document.getElementById('tab-player-overlay');
+const tabPlayerList   = document.getElementById('tab-player-list');
 
 // Socket — prefer websocket for speed
 const socket = io({ transports: ['websocket', 'polling'] });
@@ -526,11 +620,13 @@ const socket = io({ transports: ['websocket', 'polling'] });
 let currentMap  = null;
 let currentCode = null;
 let gameRunning = false;
+let gamePaused  = false;
 let lobbyPlayers = 1;
 let lobbyIsPublic = false;
 let isHost = false;
 let myName = '';
 let chatOpen = false;
+let cachedPlayerList = [];
 
 // Three.js globals
 let renderer, scene, camera;
@@ -589,14 +685,24 @@ document.addEventListener('keydown', (e) => {
   if (chatOpen && e.code !== 'Escape') return;
 
   keys[e.code] = true;
-  if (e.code === 'Space' && player.onGround) {
+  if (e.code === 'Space' && player.onGround && !gamePaused) {
     player.vel.y = player.jumpSpeed;
     player.onGround = false;
   }
   // Open in-game chat with T
-  if (e.code === 'KeyT' && gameRunning && !chatOpen) {
+  if (e.code === 'KeyT' && gameRunning && !chatOpen && !gamePaused) {
     e.preventDefault();
     openGameChat();
+  }
+  // Escape: close chat → toggle pause
+  if (e.code === 'Escape' && gameRunning && !chatOpen) {
+    e.preventDefault();
+    togglePause();
+  }
+  // Tab: show player list
+  if (e.code === 'Tab' && gameRunning) {
+    e.preventDefault();
+    showTabPlayerList();
   }
 });
 document.addEventListener('keyup', (e) => {
@@ -605,6 +711,10 @@ document.addEventListener('keyup', (e) => {
     return;
   }
   keys[e.code] = false;
+  // Tab release: hide player list
+  if (e.code === 'Tab') {
+    tabPlayerOverlay.classList.remove('visible');
+  }
 });
 
 function openGameChat() {
@@ -621,6 +731,86 @@ function closeGameChat() {
   gameChatEl.classList.remove('active');
   gameChatInput.value = '';
 }
+
+// ── Pause menu ────────────────────────────────────────────────────────────────
+function togglePause() {
+  gamePaused = !gamePaused;
+  pauseOverlay.classList.toggle('visible', gamePaused);
+  if (gamePaused && document.pointerLockElement) document.exitPointerLock();
+}
+
+function exitGame() {
+  gameRunning = false;
+  gamePaused = false;
+  pauseOverlay.classList.remove('visible');
+  hud.classList.remove('visible');
+  crosshair.classList.remove('visible');
+  lockMsg.classList.remove('visible');
+  gameChatEl.classList.remove('active');
+  gameChatInputRow.classList.remove('visible');
+  gameChatMsgs.innerHTML = '';
+  tabPlayerOverlay.classList.remove('visible');
+  if (renderer && renderer.domElement && renderer.domElement.parentNode) {
+    renderer.domElement.parentNode.removeChild(renderer.domElement);
+  }
+  if (renderer) { renderer.dispose(); renderer = null; }
+  scene = null;
+  camera = null;
+  collidables = [];
+  otherPlayerMeshes = {};
+}
+
+pauseResumeBtn.addEventListener('click', () => { togglePause(); });
+
+pauseLobbyBtn.addEventListener('click', () => {
+  exitGame();
+  lobbyScreen.classList.add('visible');
+});
+
+pauseHomeBtn.addEventListener('click', () => {
+  exitGame();
+  currentCode = null;
+  currentMap = null;
+  isHost = false;
+  menuEl.style.display = '';
+});
+
+// ── Tab player list ───────────────────────────────────────────────────────────
+function showTabPlayerList() {
+  tabPlayerList.innerHTML = '';
+  // Build list from cached player list + add self via otherPlayerMeshes count
+  const players = cachedPlayerList.length > 0 ? cachedPlayerList : [{ name: myName, isHost: isHost }];
+  players.forEach((p) => {
+    const item = document.createElement('div');
+    item.className = 'tab-player-item';
+    let html = '<span class="tab-player-name">' + escapeHtml(p.name) + '</span>';
+    if (p.isHost) html += '<span class="tab-player-host">★ HOST</span>';
+    item.innerHTML = html;
+    tabPlayerList.appendChild(item);
+  });
+  tabPlayerOverlay.classList.add('visible');
+}
+
+// ── Copy lobby code ───────────────────────────────────────────────────────────
+copyCodeBtn.addEventListener('click', () => {
+  if (!currentCode) return;
+  navigator.clipboard.writeText(currentCode).then(() => {
+    copyCodeBtn.textContent = '✓ COPIED';
+    setTimeout(() => { copyCodeBtn.textContent = '📋 COPY'; }, 1500);
+  }).catch(() => {
+    copyCodeBtn.textContent = '✗ FAILED';
+    setTimeout(() => { copyCodeBtn.textContent = '📋 COPY'; }, 1500);
+  });
+});
+
+// ── Lobby back button ─────────────────────────────────────────────────────────
+lobbyBackBtn.addEventListener('click', () => {
+  lobbyScreen.classList.remove('visible');
+  currentCode = null;
+  currentMap = null;
+  isHost = false;
+  menuEl.style.display = '';
+});
 
 // ── Chat helpers ──────────────────────────────────────────────────────────────
 function appendChatMsg(container, { sender, text, system, pm }) {
@@ -678,6 +868,7 @@ gameChatInput.addEventListener('keydown', (e) => {
 
 // ── Player list in lobby ──────────────────────────────────────────────────────
 socket.on('playerList', (list) => {
+  cachedPlayerList = list;
   renderPlayerList(list);
 });
 
@@ -999,7 +1190,7 @@ async function startGame(mapName, code) {
   renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(maxPixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = mapName !== 'arabic_city';
   renderer.shadowMap.type = THREE.PCFShadowMap;
   document.body.appendChild(renderer.domElement);
 
@@ -1095,8 +1286,10 @@ function loadMap(mapName) {
         console.log('[Map] final size:', size.toArray().map(v => +v.toFixed(2)),
                     'spawn y:', (size.y + player.height + 3).toFixed(2));
 
-        // ── Step 5: convert PBR materials → Lambert (works in all WebGL modes)──
+        // ── Step 5: convert PBR materials → Lambert and collect collision geometry
         let meshCount = 0;
+        const collisionGeometries = [];
+
         root.traverse((node) => {
           if (!node.isMesh) return;
           meshCount++;
@@ -1121,28 +1314,59 @@ function loadMap(mapName) {
           });
           node.material = converted.length === 1 ? converted[0] : converted;
 
-          // Performance: disable shadows on arab map small meshes to reduce draw calls
-          if (isArabMap) {
-            node.castShadow    = false;
-            node.receiveShadow = true;
-          } else {
-            node.castShadow    = true;
-            node.receiveShadow = true;
-          }
+          // Disable shadows on arab map entirely for performance
+          node.castShadow    = !isArabMap;
+          node.receiveShadow = true;
           node.frustumCulled = true;
-          collidables.push(node);
+
+          // Collect geometry for merged collision mesh
+          try {
+            const cloned = node.geometry.clone();
+            cloned.applyMatrix4(node.matrixWorld);
+            // Ensure geometry only has position for collision (strip other attributes)
+            const posAttr = cloned.getAttribute('position');
+            if (posAttr) {
+              const simpleGeo = new THREE.BufferGeometry();
+              simpleGeo.setAttribute('position', posAttr);
+              if (cloned.index) simpleGeo.setIndex(cloned.index);
+              collisionGeometries.push(simpleGeo);
+            }
+          } catch(e) {
+            // Fallback: add individual mesh to collidables
+            collidables.push(node);
+          }
         });
 
-        console.log('[Map] mesh count:', meshCount, isArabMap ? '(shadows disabled for perf)' : '');
+        // ── Step 5b: merge all collision geometry into one mesh ─────────────────
+        if (collisionGeometries.length > 0) {
+          try {
+            const merged = mergeGeometries(collisionGeometries, false);
+            if (merged) {
+              const collisionMat = new THREE.MeshBasicMaterial({ visible: false });
+              const collisionMesh = new THREE.Mesh(merged, collisionMat);
+              collisionMesh.name = 'merged-collision';
+              scene.add(collisionMesh);
+              collidables.push(collisionMesh);
+              console.log('[Map] merged', collisionGeometries.length, 'geometries into 1 collision mesh');
+            }
+          } catch(e) {
+            console.warn('[Map] geometry merge failed, falling back to individual meshes');
+            root.traverse((node) => {
+              if (node.isMesh) collidables.push(node);
+            });
+          }
+        }
+
+        console.log('[Map] mesh count:', meshCount, isArabMap ? '(shadows disabled for perf)' : '',
+                    'collidables:', collidables.length);
 
         // ── Step 6: find multiple spawn points across the map ──────────────────
         {
           // Concentric rings from center outward; 12 angles per ring for good coverage
           const SPAWN_SEARCH_RADII         = [0, 3, 6, 10, 15, 20, 25, 30, 40, 50, 60, 70];
           const SPAWN_SEARCH_ANGULAR_STEPS = 12;
-          const GROUND_PLANE_Y             = 0.0;  // ignore fallback ground at y=-0.05
-          const CEILING_CHECK_DIST         = 1.0;  // how far up to check for ceiling
-          const MIN_CEILING_CLEARANCE      = 0.8;  // reject if ceiling is closer than this
+          const GROUND_PLANE_Y             = -0.1;  // allow surfaces near y=0
+          const MIN_CEILING_CLEARANCE      = player.height + 0.5;
 
           const spawnRay = new THREE.Raycaster();
           const downVec  = new THREE.Vector3(0, -1, 0);
@@ -1167,27 +1391,31 @@ function loadMap(mapName) {
                 if (hit.point.y <= GROUND_PLANE_Y) continue;
 
                 // Verify this point is not inside geometry:
-                // cast a ray upward from slightly above the surface — if it hits something
-                // very close, the player would be trapped inside the mesh
-                const checkOrigin = new THREE.Vector3(px, hit.point.y + player.height + 0.1, pz);
+                const spawnY = hit.point.y + player.height + 0.3;
+                const checkOrigin = new THREE.Vector3(px, spawnY, pz);
                 spawnRay.set(checkOrigin, upVec);
-                spawnRay.far = CEILING_CHECK_DIST;
+                spawnRay.far = MIN_CEILING_CLEARANCE;
                 const ceilingHits = spawnRay.intersectObjects(collidables, true);
-                if (ceilingHits.length > 0 && ceilingHits[0].distance < MIN_CEILING_CLEARANCE) {
-                  continue; // too close to ceiling — player would be stuck
+                if (ceilingHits.length > 0) {
+                  continue; // player would be stuck
                 }
 
-                const spawnY = hit.point.y + player.height + 0.3;
-                spawnPoints.push(new THREE.Vector3(px, spawnY, pz));
+                // Also check the point is within the map bounds (not outside)
+                if (Math.abs(px) <= size.x * 0.45 && Math.abs(pz) <= size.z * 0.45) {
+                  spawnPoints.push(new THREE.Vector3(px, spawnY, pz));
+                }
                 break; // one valid point per column
               }
             }
           }
 
-          // Pick a random spawn point; fallback to above-map if none found
+          // Pick a random spawn point; fallback to center of map
           let chosenSpawn;
           if (spawnPoints.length > 0) {
-            chosenSpawn = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+            // Prefer spawn points closer to center for safety
+            spawnPoints.sort((a, b) => (a.x*a.x + a.z*a.z) - (b.x*b.x + b.z*b.z));
+            const safeCount = Math.min(spawnPoints.length, Math.max(3, Math.floor(spawnPoints.length * 0.5)));
+            chosenSpawn = spawnPoints[Math.floor(Math.random() * safeCount)];
             console.log('[Map] ' + spawnPoints.length + ' spawn points found. Chosen y=' +
               chosenSpawn.y.toFixed(2) + ' at xz=(' + chosenSpawn.x.toFixed(0) + ',' + chosenSpawn.z.toFixed(0) + ')');
           } else {
@@ -1215,24 +1443,30 @@ function loadMap(mapName) {
 const downRay = new THREE.Raycaster();
 const wallRay = new THREE.Raycaster();
 const downDir = new THREE.Vector3(0, -1, 0);
+const diag = 0.7071;
 const wallDirs = [
   new THREE.Vector3( 1, 0,  0),
   new THREE.Vector3(-1, 0,  0),
   new THREE.Vector3( 0, 0,  1),
   new THREE.Vector3( 0, 0, -1),
+  new THREE.Vector3( diag, 0,  diag),
+  new THREE.Vector3(-diag, 0,  diag),
+  new THREE.Vector3( diag, 0, -diag),
+  new THREE.Vector3(-diag, 0, -diag),
 ];
 
 function updatePhysics(dt) {
   if (!player.onGround) player.vel.y += GRAVITY * dt;
 
   // Horizontal movement
+  const moveEuler = new THREE.Euler(0, player.yaw, 0);
   const move = new THREE.Vector3();
   if (keys['KeyW']) move.z -= 1;
   if (keys['KeyS']) move.z += 1;
   if (keys['KeyA']) move.x -= 1;
   if (keys['KeyD']) move.x += 1;
   if (move.lengthSq() > 0) {
-    move.normalize().applyEuler(new THREE.Euler(0, player.yaw, 0));
+    move.normalize().applyEuler(moveEuler);
     player.vel.x = move.x * player.speed;
     player.vel.z = move.z * player.speed;
   } else {
@@ -1242,28 +1476,36 @@ function updatePhysics(dt) {
 
   const next = player.pos.clone().addScaledVector(player.vel, dt);
 
-  // Ground collision
-  downRay.set(new THREE.Vector3(next.x, player.pos.y + 0.3, next.z), downDir);
-  downRay.far = player.height + 0.5;
+  // Ground collision — cast from slightly above feet, tolerance must exceed the offset
+  const groundOffset = 0.3;
+  downRay.set(new THREE.Vector3(next.x, next.y + groundOffset, next.z), downDir);
+  downRay.far = player.height + 1.0;
   const groundHits = downRay.intersectObjects(collidables, true);
-  if (groundHits.length > 0 && groundHits[0].distance <= player.height + 0.2) {
-    next.y = groundHits[0].point.y + player.height;
-    player.vel.y = 0;
-    player.onGround = true;
+  if (groundHits.length > 0 && groundHits[0].distance <= player.height + groundOffset + 0.1) {
+    const groundY = groundHits[0].point.y + player.height;
+    // Only snap when falling or very close to ground (prevents upward jitter)
+    if (player.vel.y <= 0 || Math.abs(next.y - groundY) < 0.3) {
+      next.y = groundY;
+      player.vel.y = 0;
+      player.onGround = true;
+    }
   } else {
     player.onGround = false;
   }
 
-  // Wall collision
-  const wallOrigin = new THREE.Vector3(next.x, next.y - player.height * 0.5, next.z);
-  for (const dir of wallDirs) {
-    wallRay.set(wallOrigin, dir);
-    wallRay.far = player.radius + 0.05;
-    const hits = wallRay.intersectObjects(collidables, true);
-    if (hits.length > 0) {
-      const overlap = (player.radius + 0.05) - hits[0].distance;
-      next.x -= dir.x * overlap;
-      next.z -= dir.z * overlap;
+  // Wall collision — check at multiple heights and 8 directions for robust blocking
+  const wallCheckHeights = [0.3, 0.9, 1.5];
+  for (const h of wallCheckHeights) {
+    const wallOrigin = new THREE.Vector3(next.x, next.y - player.height + h, next.z);
+    for (const dir of wallDirs) {
+      wallRay.set(wallOrigin, dir);
+      wallRay.far = player.radius + 0.1;
+      const hits = wallRay.intersectObjects(collidables, true);
+      if (hits.length > 0) {
+        const overlap = (player.radius + 0.1) - hits[0].distance;
+        next.x -= dir.x * overlap;
+        next.z -= dir.z * overlap;
+      }
     }
   }
 
@@ -1284,7 +1526,10 @@ function animate(ts = 0) {
   const dt = Math.min((ts - prevTime) / 1000, 0.05);
   prevTime = ts;
 
-  updatePhysics(dt);
+  // Skip physics when paused
+  if (!gamePaused) {
+    updatePhysics(dt);
+  }
 
   camera.position.copy(player.pos);
   camera.rotation.order = 'YXZ';
