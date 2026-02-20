@@ -77,8 +77,17 @@
       color: #fff; background: #111; padding: 0.8rem 2rem;
       border: 2px solid #e63946; margin-bottom: 0.5rem;
     }
-    #lobby-map-display { color: #aaa; font-size: 1.1rem; margin-bottom: 2rem; }
-    #player-count { color: #aaa; font-size: 1rem; margin-bottom: 2rem; }
+    #lobby-map-display { color: #aaa; font-size: 1.1rem; margin-bottom: 1rem; }
+    #player-count { color: #aaa; font-size: 1rem; margin-bottom: 1rem; }
+    #visibility-toggle {
+      width: 220px; padding: 0.7rem;
+      margin-bottom: 1.5rem;
+      background: transparent; border: 1.5px solid #e63946;
+      color: #fff; font-size: 1rem; cursor: pointer;
+      transition: background 0.15s;
+    }
+    #visibility-toggle:hover { background: #e6394644; }
+    #visibility-toggle.public { border-color: #4caf50; color: #4caf50; }
     #start-btn {
       width: 220px; padding: 1rem;
       background: #e63946; border: none;
@@ -86,6 +95,45 @@
       transition: box-shadow 0.2s;
     }
     #start-btn:hover { box-shadow: 0 0 20px #e63946; }
+
+    #server-list-screen {
+      position: fixed; inset: 0;
+      display: none; flex-direction: column;
+      align-items: center; justify-content: flex-start;
+      padding-top: 4rem;
+      background: radial-gradient(ellipse at center, #0d1b2a 0%, #050508 100%);
+      z-index: 10; overflow-y: auto;
+    }
+    #server-list-screen.visible { display: flex; }
+    #server-list-screen h2 { font-size: 2rem; color: #e63946; margin-bottom: 1.5rem; }
+    #server-list {
+      width: 90%; max-width: 600px;
+      display: flex; flex-direction: column; gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .server-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: #111; border: 1px solid #333; padding: 1rem 1.5rem;
+      cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    }
+    .server-item:hover { border-color: #e63946; background: #1a1a2e; }
+    .server-item-map { color: #fff; font-size: 1.1rem; }
+    .server-item-players { color: #aaa; font-size: 0.95rem; }
+    #server-list-empty { color: #666; font-size: 1rem; margin-bottom: 2rem; }
+    #server-list-back {
+      width: 200px; padding: 0.8rem;
+      background: transparent; border: 1.5px solid #e63946;
+      color: #fff; font-size: 1rem; cursor: pointer;
+      transition: background 0.15s; margin-bottom: 2rem;
+    }
+    #server-list-back:hover { background: #e63946; }
+    #server-list-refresh {
+      width: 200px; padding: 0.8rem;
+      background: transparent; border: 1.5px solid #4caf50;
+      color: #4caf50; font-size: 1rem; cursor: pointer;
+      transition: background 0.15s; margin-bottom: 1rem;
+    }
+    #server-list-refresh:hover { background: #4caf5044; }
 
     #loading-screen {
       position: fixed; inset: 0;
@@ -146,6 +194,7 @@
   <h1>BAITERFPS</h1>
   <button class="menu-btn" id="btn-create">CREATE LOBBY</button>
   <button class="menu-btn" id="btn-enter">ENTER CODE</button>
+  <button class="menu-btn" id="btn-servers">SERVER LIST</button>
 </div>
 
 <!-- Enter Code Dialog -->
@@ -161,12 +210,22 @@
   </div>
 </div>
 
+<!-- Server List Screen -->
+<div id="server-list-screen">
+  <h2>PUBLIC SERVERS</h2>
+  <button id="server-list-refresh">REFRESH</button>
+  <div id="server-list"></div>
+  <div id="server-list-empty">No public servers available.</div>
+  <button id="server-list-back">BACK</button>
+</div>
+
 <!-- Lobby Waiting Screen -->
 <div id="lobby-screen">
   <h2>LOBBY</h2>
   <div id="lobby-code-display">------</div>
   <div id="lobby-map-display">Map: -</div>
   <div id="player-count">Players: 1 / 16</div>
+  <button id="visibility-toggle">PRIVATE</button>
   <button id="start-btn">START GAME</button>
 </div>
 
@@ -208,6 +267,7 @@ if ('serviceWorker' in navigator) {
 const menuEl        = document.getElementById('menu');
 const btnCreate     = document.getElementById('btn-create');
 const btnEnter      = document.getElementById('btn-enter');
+const btnServers    = document.getElementById('btn-servers');
 const codeDialog    = document.getElementById('code-dialog');
 const codeInput     = document.getElementById('code-input');
 const codeJoinBtn   = document.getElementById('code-join-btn');
@@ -217,7 +277,13 @@ const lobbyScreen   = document.getElementById('lobby-screen');
 const lobbyCodeEl   = document.getElementById('lobby-code-display');
 const lobbyMapEl    = document.getElementById('lobby-map-display');
 const playerCountEl = document.getElementById('player-count');
+const visibilityBtn = document.getElementById('visibility-toggle');
 const startBtn      = document.getElementById('start-btn');
+const serverListScreen = document.getElementById('server-list-screen');
+const serverListEl     = document.getElementById('server-list');
+const serverListEmpty  = document.getElementById('server-list-empty');
+const serverListBack   = document.getElementById('server-list-back');
+const serverListRefresh= document.getElementById('server-list-refresh');
 const loadingScreen = document.getElementById('loading-screen');
 const loadingText   = document.getElementById('loading-text');
 const loadingBar    = document.getElementById('loading-bar');
@@ -228,7 +294,7 @@ const hudPlayers    = document.getElementById('hud-players');
 const crosshair     = document.getElementById('crosshair');
 const lockMsg       = document.getElementById('lock-msg');
 
-// Socket
+// Socket — prefer websocket for speed
 const socket = io({ transports: ['websocket', 'polling'] });
 
 // State
@@ -236,6 +302,7 @@ let currentMap  = null;
 let currentCode = null;
 let gameRunning = false;
 let lobbyPlayers = 1;
+let lobbyIsPublic = false;
 
 // Three.js globals
 let renderer, scene, camera;
@@ -283,14 +350,16 @@ document.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
 // ── MENU ──────────────────────────────────────────────────────────────────────
 btnCreate.addEventListener('click', () => {
-  socket.emit('createLobby', (res) => {
+  socket.emit('createLobby', { isPublic: false }, (res) => {
     if (!res.success) { alert('Could not create lobby.'); return; }
     currentCode  = res.code;
     currentMap   = res.map;
     lobbyPlayers = 1;
+    lobbyIsPublic = false;
     lobbyCodeEl.textContent = res.code;
     lobbyMapEl.textContent  = 'Map: ' + formatMapName(res.map);
     playerCountEl.textContent = 'Players: 1 / 16';
+    updateVisibilityBtn();
     menuEl.style.display = 'none';
     lobbyScreen.classList.add('visible');
   });
@@ -310,6 +379,10 @@ codeJoinBtn.addEventListener('click', () => {
   const code = codeInput.value.trim().toUpperCase();
   if (code.length !== 6) { dialogError.textContent = 'Code must be 6 characters.'; return; }
   dialogError.textContent = '';
+  joinLobbyByCode(code);
+});
+
+function joinLobbyByCode(code) {
   socket.emit('joinLobby', { code }, (res) => {
     if (!res.success) { dialogError.textContent = res.error || 'Failed to join.'; return; }
     currentCode  = code;
@@ -320,15 +393,73 @@ codeJoinBtn.addEventListener('click', () => {
     playerCountEl.textContent = 'Players: ' + lobbyPlayers + ' / 16';
     if (res.existingPlayers) res.existingPlayers.forEach(remotePlayerJoined);
     codeDialog.classList.remove('visible');
+    serverListScreen.classList.remove('visible');
     menuEl.style.display = 'none';
     lobbyScreen.classList.add('visible');
   });
+}
+
+// Visibility toggle (public/private)
+visibilityBtn.addEventListener('click', () => {
+  lobbyIsPublic = !lobbyIsPublic;
+  socket.emit('toggleVisibility', { isPublic: lobbyIsPublic }, () => {});
+  updateVisibilityBtn();
 });
 
+function updateVisibilityBtn() {
+  if (lobbyIsPublic) {
+    visibilityBtn.textContent = 'PUBLIC';
+    visibilityBtn.classList.add('public');
+  } else {
+    visibilityBtn.textContent = 'PRIVATE';
+    visibilityBtn.classList.remove('public');
+  }
+}
+
+// Start game — broadcast to all lobby members via server
 startBtn.addEventListener('click', () => {
-  lobbyScreen.classList.remove('visible');
-  startGame(currentMap, currentCode);
+  socket.emit('startGame', () => {});
 });
+
+// Listen for game start broadcast from server (triggered by any player clicking start)
+socket.on('gameStart', ({ map, code }) => {
+  if (gameRunning) return;
+  currentMap = map;
+  currentCode = code;
+  lobbyScreen.classList.remove('visible');
+  startGame(map, code);
+});
+
+// ── SERVER LIST ───────────────────────────────────────────────────────────────
+btnServers.addEventListener('click', () => {
+  menuEl.style.display = 'none';
+  serverListScreen.classList.add('visible');
+  refreshServerList();
+});
+
+serverListBack.addEventListener('click', () => {
+  serverListScreen.classList.remove('visible');
+  menuEl.style.display = '';
+});
+
+serverListRefresh.addEventListener('click', refreshServerList);
+
+function refreshServerList() {
+  socket.emit('listLobbies', (res) => {
+    serverListEl.innerHTML = '';
+    const list = res.lobbies || [];
+    serverListEmpty.style.display = list.length === 0 ? '' : 'none';
+    list.forEach((lobby) => {
+      const item = document.createElement('div');
+      item.className = 'server-item';
+      item.innerHTML =
+        '<span class="server-item-map">' + formatMapName(lobby.map) + '</span>' +
+        '<span class="server-item-players">' + lobby.playerCount + ' / ' + lobby.maxPlayers + '</span>';
+      item.addEventListener('click', () => joinLobbyByCode(lobby.code));
+      serverListEl.appendChild(item);
+    });
+  });
+}
 
 function formatMapName(name) {
   return name.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -376,29 +507,31 @@ async function startGame(mapName, code) {
   loadingText.textContent = 'Loading ' + formatMapName(mapName) + '...';
   loadingBar.style.width = '5%';
 
-  renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // Performance: cap pixel ratio at 1.5 to reduce GPU load
+  const maxPixelRatio = Math.min(window.devicePixelRatio, 1.5);
+  renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(maxPixelRatio);
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.shadowMap.enabled = true;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
   document.body.appendChild(renderer.domElement);
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x87ceeb);
-  scene.fog = new THREE.Fog(0x87ceeb, 80, 250);
+  scene.fog = new THREE.Fog(0x87ceeb, 60, 200);
 
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 500);
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 300);
 
   // Lighting
   scene.add(new THREE.AmbientLight(0xffffff, 0.8));
   const sun = new THREE.DirectionalLight(0xffffff, 1.0);
   sun.position.set(50, 100, 50);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.mapSize.set(512, 512);
   sun.shadow.camera.near = 0.5;
-  sun.shadow.camera.far  = 300;
-  sun.shadow.camera.left = sun.shadow.camera.bottom = -100;
-  sun.shadow.camera.right = sun.shadow.camera.top   =  100;
+  sun.shadow.camera.far  = 200;
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -80;
+  sun.shadow.camera.right = sun.shadow.camera.top   =  80;
   scene.add(sun);
 
   // Fallback ground — kept slightly below y=0 to avoid z-fighting with map floor
@@ -473,6 +606,11 @@ function loadMap(mapName) {
           const mats = Array.isArray(node.material) ? node.material : [node.material];
           const converted = mats.map((mat) => {
             if (!mat) return new THREE.MeshLambertMaterial({ color: 0xcccccc });
+            // Fix texture encoding for proper display
+            if (mat.map) {
+              mat.map.colorSpace = THREE.SRGBColorSpace;
+              mat.map.needsUpdate = true;
+            }
             const lamb = new THREE.MeshLambertMaterial({
               map:         mat.map         || null,
               color:       mat.color       ? mat.color.clone() : new THREE.Color(0xffffff),
@@ -490,43 +628,64 @@ function loadMap(mapName) {
           collidables.push(node);
         });
 
-        // ── Step 6: smart spawn — cast rays to find actual map surface ─────────
+        // ── Step 6: find multiple spawn points across the map ──────────────────
         {
-          const SPAWN_SEARCH_RADII         = [0, 5, 10, 15, 20, 25, 30, 40, 50, 60, 70];
-          const SPAWN_SEARCH_ANGULAR_STEPS = 8;   // 45-degree increments around each ring
-          const MIN_SPAWN_HEIGHT           = 0.2; // ignore fallback ground plane at y=-0.05
+          const SPAWN_SEARCH_RADII         = [0, 3, 6, 10, 15, 20, 25, 30, 40, 50, 60, 70];
+          const SPAWN_SEARCH_ANGULAR_STEPS = 12;
+          const GROUND_PLANE_Y             = 0.0;
 
           const spawnRay = new THREE.Raycaster();
           const downVec  = new THREE.Vector3(0, -1, 0);
-          const testY    = size.y + 10;
-          let   bestSpawn = null;
+          const upVec    = new THREE.Vector3(0, 1, 0);
+          const testY    = size.y + 20;
+          const spawnPoints = [];
 
-          // Search center-outward in concentric rings; find first floor mesh above ground
-          outer:
           for (const r of SPAWN_SEARCH_RADII) {
             const angleCount = r === 0 ? 1 : SPAWN_SEARCH_ANGULAR_STEPS;
             for (let i = 0; i < angleCount; i++) {
               const a = (i / angleCount) * Math.PI * 2;
               const px = Math.cos(a) * r;
               const pz = Math.sin(a) * r;
+
+              // Cast from very high above to find surfaces
               spawnRay.set(new THREE.Vector3(px, testY, pz), downVec);
-              const hits   = spawnRay.intersectObjects(collidables, true);
-              const mapHit = hits.find(h => h.point.y > MIN_SPAWN_HEIGHT);
-              if (mapHit) {
-                bestSpawn = new THREE.Vector3(px, mapHit.point.y + player.height + 0.3, pz);
-                console.log('[Map] Spawn on surface y=' + mapHit.point.y.toFixed(2),
-                            'at xz=(' + px.toFixed(0) + ',' + pz.toFixed(0) + ')');
-                break outer;
+              spawnRay.far = testY + 50;
+              const hits = spawnRay.intersectObjects(collidables, true);
+
+              // Find the first hit that is an actual map surface (not the fallback ground)
+              for (const hit of hits) {
+                if (hit.point.y <= GROUND_PLANE_Y) continue;
+
+                // Verify this point is not inside geometry:
+                // cast a ray upward from slightly above the surface — if it hits something
+                // very close, the player would be trapped inside the mesh
+                const checkOrigin = new THREE.Vector3(px, hit.point.y + player.height + 0.1, pz);
+                spawnRay.set(checkOrigin, upVec);
+                spawnRay.far = 1.0;
+                const ceilingHits = spawnRay.intersectObjects(collidables, true);
+                if (ceilingHits.length > 0 && ceilingHits[0].distance < 0.8) {
+                  continue; // too close to ceiling — player would be stuck
+                }
+
+                const spawnY = hit.point.y + player.height + 0.3;
+                spawnPoints.push(new THREE.Vector3(px, spawnY, pz));
+                break; // one valid point per column
               }
             }
           }
 
-          if (!bestSpawn) {
-            bestSpawn = new THREE.Vector3(0, size.y + player.height + 3, 0);
-            console.log('[Map] No surface found — fallback spawn y=' + bestSpawn.y.toFixed(2));
+          // Pick a random spawn point; fallback to above-map if none found
+          let chosenSpawn;
+          if (spawnPoints.length > 0) {
+            chosenSpawn = spawnPoints[Math.floor(Math.random() * spawnPoints.length)];
+            console.log('[Map] ' + spawnPoints.length + ' spawn points found. Chosen y=' +
+              chosenSpawn.y.toFixed(2) + ' at xz=(' + chosenSpawn.x.toFixed(0) + ',' + chosenSpawn.z.toFixed(0) + ')');
+          } else {
+            chosenSpawn = new THREE.Vector3(0, player.height + 3, 0);
+            console.log('[Map] No surface found — fallback spawn y=' + chosenSpawn.y.toFixed(2));
           }
 
-          player.pos.copy(bestSpawn);
+          player.pos.copy(chosenSpawn);
           player.vel.set(0, 0, 0);
         }
 

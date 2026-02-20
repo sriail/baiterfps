@@ -16,11 +16,11 @@ const PORT = process.env.PORT || 3000;
 const MAX_PLAYERS = 16;
 const MAPS = ['arabic_city', 'old_town', 'snow_town'];
 
-// Serve static files
-app.use(express.static(path.join(__dirname, 'src/playercontent')));
-app.use('/maps', express.static(path.join(__dirname, 'src/recources/maps')));
+// Serve static files with compression headers
+app.use(express.static(path.join(__dirname, 'src/playercontent'), { maxAge: '1h' }));
+app.use('/maps', express.static(path.join(__dirname, 'src/recources/maps'), { maxAge: '7d' }));
 
-// Lobby storage: code -> { map, players: Map<socketId, playerState> }
+// Lobby storage: code -> { map, host, isPublic, players: Map<socketId, playerState> }
 const lobbies = new Map();
 
 function generateCode() {
@@ -43,10 +43,12 @@ function getUniqueLobbyCode() {
 io.on('connection', (socket) => {
   let currentLobbyCode = null;
 
-  socket.on('createLobby', (callback) => {
+  socket.on('createLobby', ({ map: chosenMap, isPublic } = {}, callback) => {
+    // Support old-style callback-only signature
+    if (typeof chosenMap === 'function') { callback = chosenMap; chosenMap = undefined; }
     const code = getUniqueLobbyCode();
-    const map = MAPS[Math.floor(Math.random() * MAPS.length)];
-    lobbies.set(code, { map, players: new Map() });
+    const map = MAPS.includes(chosenMap) ? chosenMap : MAPS[Math.floor(Math.random() * MAPS.length)];
+    lobbies.set(code, { map, host: socket.id, isPublic: !!isPublic, players: new Map() });
 
     currentLobbyCode = code;
     socket.join(code);
@@ -54,7 +56,7 @@ io.on('connection', (socket) => {
     const playerState = { id: socket.id, x: 0, y: 2, z: 0, yaw: 0 };
     lobbies.get(code).players.set(socket.id, playerState);
 
-    callback({ success: true, code, map });
+    callback({ success: true, code, map, isPublic: !!isPublic });
   });
 
   socket.on('joinLobby', ({ code }, callback) => {
@@ -84,6 +86,41 @@ io.on('connection', (socket) => {
 
     // Notify others of new player
     socket.to(normalizedCode).emit('playerJoined', playerState);
+  });
+
+  // Toggle lobby visibility (public/private)
+  socket.on('toggleVisibility', ({ isPublic }, callback) => {
+    if (!currentLobbyCode) return callback && callback({ success: false });
+    const lobby = lobbies.get(currentLobbyCode);
+    if (!lobby || lobby.host !== socket.id) return callback && callback({ success: false });
+    lobby.isPublic = !!isPublic;
+    if (callback) callback({ success: true, isPublic: lobby.isPublic });
+  });
+
+  // Host starts game → broadcast to all lobby members
+  socket.on('startGame', (callback) => {
+    if (!currentLobbyCode) return callback && callback({ success: false });
+    const lobby = lobbies.get(currentLobbyCode);
+    if (!lobby) return callback && callback({ success: false });
+    // Broadcast to everyone in the lobby (including sender via io.to)
+    io.to(currentLobbyCode).emit('gameStart', { map: lobby.map, code: currentLobbyCode });
+    if (callback) callback({ success: true });
+  });
+
+  // List all public lobbies
+  socket.on('listLobbies', (callback) => {
+    const publicLobbies = [];
+    lobbies.forEach((lobby, code) => {
+      if (lobby.isPublic) {
+        publicLobbies.push({
+          code,
+          map: lobby.map,
+          playerCount: lobby.players.size,
+          maxPlayers: MAX_PLAYERS
+        });
+      }
+    });
+    callback({ lobbies: publicLobbies });
   });
 
   socket.on('playerMove', (state) => {
