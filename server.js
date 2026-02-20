@@ -216,8 +216,17 @@ io.on('connection', (socket) => {
     });
     if (candidates.length > 0) {
       const code = candidates[Math.floor(Math.random() * candidates.length)];
-      // Join that lobby
-      socket.emit('joinLobby', { code }, callback);
+      const lobby = lobbies.get(code);
+      currentLobbyCode = code;
+      socket.join(code);
+      const playerState = { id: socket.id, name: playerName, x: 0, y: 2, z: 0, yaw: 0 };
+      lobby.players.set(socket.id, playerState);
+      const existingPlayers = [];
+      lobby.players.forEach((p, id) => { if (id !== socket.id) existingPlayers.push(p); });
+      callback({ success: true, code, map: lobby.map, existingPlayers, isHost: false, isPublic: true, playerList: getPlayerList(lobby) });
+      socket.to(code).emit('playerJoined', playerState);
+      io.to(code).emit('chatMessage', { sender: '', text: playerName + ' has joined the lobby', system: true });
+      broadcastPlayerList(code);
     } else {
       // Create a new public lobby with a random map
       const code = getUniqueLobbyCode();

@@ -353,8 +353,8 @@
     <h2>CREATE LOBBY</h2>
     <label>Select Map</label>
     <select id="create-map-select">
-      <option value="arabic_city">Arab City</option>
-      <option value="snow_town">Snowy Village</option>
+      <option value="arabic_city">Arabic City</option>
+      <option value="snow_town">Snow Town</option>
     </select>
     <div class="dialog-row">
       <button id="create-confirm-btn">CREATE</button>
@@ -393,8 +393,8 @@
   <div id="map-select-row">
     <label>Change Map:</label>
     <select id="lobby-map-select">
-      <option value="arabic_city">Arab City</option>
-      <option value="snow_town">Snowy Village</option>
+      <option value="arabic_city">Arabic City</option>
+      <option value="snow_town">Snow Town</option>
     </select>
   </div>
   <div id="player-count">Players: 1 / 16</div>
@@ -585,7 +585,7 @@ document.addEventListener('mousemove', (e) => {
 
 // Keyboard
 document.addEventListener('keydown', (e) => {
-  // Don't capture game keys when chat is open
+  // Don't capture game keys when chat is open; allow Escape through to close chat
   if (chatOpen && e.code !== 'Escape') return;
 
   keys[e.code] = true;
