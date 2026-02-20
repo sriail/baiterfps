@@ -8,6 +8,8 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0a0a0f; color: #fff; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
     canvas { display: block; }
+    button { font-family: 'Segoe UI', sans-serif; letter-spacing: 0.03em; }
+    input, select { font-family: 'Segoe UI', sans-serif; }
 
     #menu {
       position: fixed; inset: 0;
@@ -1454,12 +1456,13 @@ const wallDirs = [
   new THREE.Vector3( diag, 0, -diag),
   new THREE.Vector3(-diag, 0, -diag),
 ];
+const moveEuler = new THREE.Euler(0, 0, 0);
 
 function updatePhysics(dt) {
   if (!player.onGround) player.vel.y += GRAVITY * dt;
 
   // Horizontal movement
-  const moveEuler = new THREE.Euler(0, player.yaw, 0);
+  moveEuler.y = player.yaw;
   const move = new THREE.Vector3();
   if (keys['KeyW']) move.z -= 1;
   if (keys['KeyS']) move.z += 1;
