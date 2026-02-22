@@ -272,7 +272,7 @@ export class Game {
     return new Promise((resolve) => {
       const loader = new GLTFLoader();
       loader.load(
-        `/maps/${mapName}/scene.gltf`,
+        `/maps/${mapName}/scene.glb`,
         (gltf) => {
           gltf.scene.traverse((node) => {
             if (!node.isMesh) return;
