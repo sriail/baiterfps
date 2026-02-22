@@ -3,13 +3,16 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
-const PLAYER_MOVE_SPEED = 5;
-const PLAYER_RUN_SPEED  = 9;
-const PLAYER_HEIGHT     = 1.7;   // eye height
-const CAPSULE_HEIGHT    = 1.8;   // full capsule
-const GRAVITY           = -20;
-const JUMP_FORCE        = 8;
-const BROADCAST_RATE    = 50;    // ms
+const PLAYER_MOVE_SPEED     = 5;
+const PLAYER_RUN_SPEED      = 9;
+const PLAYER_HEIGHT         = 1.7;   // eye height
+const CAPSULE_HEIGHT        = 1.8;   // full capsule
+const GRAVITY               = -20;
+const JUMP_FORCE            = 8;
+const BROADCAST_RATE        = 50;    // ms
+const FOOTSTEP_WALK_INTERVAL = 0.5;  // seconds between walk steps
+const FOOTSTEP_RUN_INTERVAL  = 0.35; // seconds between run steps
+const FOOTSTEP_AUDIO_RANGE   = 20;   // max distance (m) to hear remote footsteps
 
 export class Game {
   constructor(lobbyData, playerName) {
@@ -47,6 +50,9 @@ export class Game {
     this._animTime     = 0;
 
     this._pendingPlayers = []; // players that arrived before assets were ready
+
+    this._footstepAudios = [];
+    this._stepTimer      = 0;
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -62,6 +68,7 @@ export class Game {
     this.setupKeyboard();
     this.setupSocketListeners();
     this.setupChat();
+    this._loadFootstepAudios();
 
     this.updateLoading('Loading character assets…', 10);
     await this.loadSharedAssets();
@@ -70,7 +77,7 @@ export class Game {
     await this.loadMap(this.lobbyData.map);
 
     this.setupLocalPlayer();
-    this.createGun();
+    await this.createGun();
     this.addExistingPlayers(this.lobbyData.players || []);
 
     // Drain any players that joined during loading
@@ -202,7 +209,7 @@ export class Game {
     // ── Character model ──────────────────────────────────────────
     try {
       const model = await fbxLoader.loadAsync('/characters/terrorist-soldier.fbx');
-      model.scale.setScalar(0.01);
+      model.scale.setScalar(0.00125); // 1/8 of original 0.01
       this.sharedCharacterModel = model;
     } catch (err) {
       console.warn('Could not load character model:', err.message);
@@ -307,10 +314,53 @@ export class Game {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  //  GUN (procedural AR-15)
+  //  FOOTSTEP AUDIO
   // ═══════════════════════════════════════════════════════════════
 
-  createGun() {
+  _loadFootstepAudios() {
+    for (let i = 1; i <= 4; i++) {
+      const audio = new Audio(`/audio/footstep-${i}.mp3`);
+      audio.volume = 0.4;
+      this._footstepAudios.push(audio);
+    }
+  }
+
+  _playRandomFootstep(volume = 0.4) {
+    if (this._footstepAudios.length === 0) return;
+    const idx = Math.floor(Math.random() * this._footstepAudios.length);
+    const audio = this._footstepAudios[idx];
+    audio.volume = Math.max(0, Math.min(1, volume));
+    audio.currentTime = 0;
+    audio.play().catch(() => {});
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  //  GUN (GLB ar-15 model)
+  // ═══════════════════════════════════════════════════════════════
+
+  async createGun() {
+    this.gunGroup = new THREE.Group();
+    this.cameraMount.add(this.gunGroup);
+
+    try {
+      const loader = new GLTFLoader();
+      const gltf = await loader.loadAsync('/guns/ar-15/ar-15.glb');
+      const gunModel = gltf.scene;
+
+      // Scale and position to match the original first-person gun placement
+      gunModel.scale.setScalar(0.3);
+      gunModel.position.set(0.22, -0.18, -0.4);
+      gunModel.rotation.y = Math.PI;
+
+      this.gunGroup.add(gunModel);
+    } catch (err) {
+      console.warn('Could not load gun GLB model:', err.message);
+      // Fallback: procedural AR-15 geometry
+      this._createProceduralGun();
+    }
+  }
+
+  _createProceduralGun() {
     const mat = new THREE.MeshStandardMaterial({
       color: 0x1a1a1a,
       metalness: 0.8,
@@ -361,9 +411,7 @@ export class Game {
     innerGroup.position.set(0.22, -0.18, -0.4);
     innerGroup.rotation.y = Math.PI;
 
-    this.gunGroup = new THREE.Group();
     this.gunGroup.add(innerGroup);
-    this.cameraMount.add(this.gunGroup);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -401,7 +449,7 @@ export class Game {
 
     // Nametag sprite
     const nameTag = this._createNametag(data.name || 'Player');
-    nameTag.position.set(0, 200, 0); // 200 cm above feet in local space (scale 0.01)
+    nameTag.position.set(0, 1600, 0); // above feet in local space (scale 0.00125 → ~2m world)
     model.add(nameTag);
 
     this.scene.add(model);
@@ -411,6 +459,7 @@ export class Game {
       animations: anims,
       currentAnim: 'idle',
       nameTag,
+      stepTimer: 0,
     });
   }
 
@@ -431,9 +480,9 @@ export class Game {
     const texture = new THREE.CanvasTexture(canvas);
     const mat     = new THREE.SpriteMaterial({ map: texture, depthTest: false });
     const sprite  = new THREE.Sprite(mat);
-    // Model scale is 0.01, so world scale = sprite.scale * 0.01
-    // We want world 1.5m × 0.375m → local 150 × 37.5
-    sprite.scale.set(150, 37.5, 1);
+    // Model scale is 0.00125, so world scale = sprite.scale * 0.00125
+    // We want world 1.5m × 0.375m → local 1200 × 300
+    sprite.scale.set(1200, 300, 1);
     return sprite;
   }
 
@@ -675,9 +724,27 @@ export class Game {
     // ── Local animation mixer ──────────────────────────────────
     if (this.localMixer) this.localMixer.update(delta);
 
-    // ── Remote player mixers ───────────────────────────────────
+    // ── Remote player mixers + footstep audio ─────────────────
     for (const rp of this.remotePlayers.values()) {
       rp.mixer.update(delta);
+
+      // Play footstep sounds for nearby walking remote players
+      if (rp.currentAnim && rp.currentAnim !== 'idle') {
+        const dist = rp.model.position.distanceTo(this.playerObject.position);
+        if (dist < FOOTSTEP_AUDIO_RANGE) {
+          const stepInterval = rp.currentAnim === 'run' ? FOOTSTEP_RUN_INTERVAL : FOOTSTEP_WALK_INTERVAL;
+          rp.stepTimer += delta;
+          if (rp.stepTimer >= stepInterval) {
+            rp.stepTimer = 0;
+            const volume = Math.max(0, 0.4 * (1 - dist / FOOTSTEP_AUDIO_RANGE));
+            this._playRandomFootstep(volume);
+          }
+        } else {
+          rp.stepTimer = 0;
+        }
+      } else {
+        rp.stepTimer = 0;
+      }
     }
 
     // ── Throttled network broadcast ────────────────────────────
@@ -727,6 +794,18 @@ export class Game {
       else                  animState = 'walk';
     }
     this._playLocalAnimation(animState);
+
+    // ── Local footstep sounds ──────────────────────────────────
+    if (animState !== 'idle') {
+      const stepInterval = animState === 'run' ? FOOTSTEP_RUN_INTERVAL : FOOTSTEP_WALK_INTERVAL;
+      this._stepTimer += delta;
+      if (this._stepTimer >= stepInterval) {
+        this._stepTimer = 0;
+        this._playRandomFootstep(0.4);
+      }
+    } else {
+      this._stepTimer = 0;
+    }
 
     // ── Normalise diagonal movement ────────────────────────────
     if (moving) moveDir.normalize();
