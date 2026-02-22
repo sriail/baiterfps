@@ -123,7 +123,7 @@ export class Game {
     );
 
     this.playerObject = new THREE.Object3D();
-    this.playerObject.position.set(2, 2, 2);
+    this.playerObject.position.set(0, 30, 0);
     this.scene.add(this.playerObject);
 
     this.cameraMount = new THREE.Object3D();
@@ -266,6 +266,8 @@ export class Game {
             }
           });
           this.scene.add(gltf.scene);
+          // Ensure world matrices are current for raycasting
+          this.scene.updateMatrixWorld(true);
           this.updateLoading('Map loaded.', 90);
           resolve();
         },
@@ -732,10 +734,13 @@ export class Game {
     // ── Gravity ────────────────────────────────────────────────
     this.velocity.y += GRAVITY * delta;
 
-    // ── Ground check (raycast downward) ───────────────────────
-    const origin = this.playerObject.position.clone().add(new THREE.Vector3(0, 1.9, 0));
-    this._raycaster.set(origin, new THREE.Vector3(0, -1, 0));
-    this._raycaster.far = 2.1;
+    // ── Ground check (long-range downward raycast) ────────────
+    // Ray from slightly above feet, shoots down far enough to
+    // catch the ground even after a fast fall.
+    const groundOrigin = this.playerObject.position.clone();
+    groundOrigin.y += 0.2; // slightly above feet
+    this._raycaster.set(groundOrigin, new THREE.Vector3(0, -1, 0));
+    this._raycaster.far = 300;
 
     let groundY = null;
     if (this.collisionMeshes.length > 0) {
@@ -743,10 +748,19 @@ export class Game {
       if (hits.length > 0) groundY = hits[0].point.y;
     }
 
-    if (groundY !== null && this.playerObject.position.y <= groundY + 0.05) {
+    // Predict next vertical position
+    const nextY = this.playerObject.position.y + this.velocity.y * delta;
+
+    if (groundY !== null && this.velocity.y <= 0 && nextY <= groundY) {
+      // Player would land on or pass through ground this frame — snap feet to ground
       this.playerObject.position.y = groundY;
       this.onGround = true;
-      if (this.velocity.y < 0) this.velocity.y = 0;
+      this.velocity.y = 0;
+    } else if (groundY !== null && this.playerObject.position.y <= groundY + 0.05 && this.velocity.y <= 0) {
+      // Already at ground level
+      this.playerObject.position.y = groundY;
+      this.onGround = true;
+      this.velocity.y = 0;
     } else {
       this.onGround = false;
     }
@@ -759,28 +773,39 @@ export class Game {
 
     // ── Wall collision (horizontal) ───────────────────────────
     if (moving && this.collisionMeshes.length > 0) {
-      const wallOrigin = this.playerObject.position.clone().add(new THREE.Vector3(0, 1, 0));
-      this._raycaster.set(wallOrigin, moveDir);
+      const wallOrigin = this.playerObject.position.clone();
+      wallOrigin.y += 1.0; // chest height
+      this._raycaster.set(wallOrigin, moveDir.clone().normalize());
       this._raycaster.far = 0.5;
       const wallHits = this._raycaster.intersectObjects(this.collisionMeshes, false);
       if (wallHits.length > 0) {
-        // Try sliding: project movement onto wall normal
-        const normal = wallHits[0].face ? wallHits[0].face.normal.clone() : new THREE.Vector3();
-        normal.y = 0;
-        normal.normalize();
-        moveDir.sub(normal.multiplyScalar(moveDir.dot(normal)));
+        // Slide along wall: remove the component of moveDir along the wall normal
+        const hit = wallHits[0];
+        if (hit.face) {
+          // Transform local face normal to world space
+          const normalMatrix = new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld);
+          const worldNormal = hit.face.normal.clone().applyMatrix3(normalMatrix).normalize();
+          worldNormal.y = 0;
+          if (worldNormal.lengthSq() > 0.001) {
+            worldNormal.normalize();
+            const dot = moveDir.dot(worldNormal);
+            if (dot < 0) moveDir.addScaledVector(worldNormal, -dot);
+          }
+        }
       }
     }
 
     // ── Apply horizontal movement ──────────────────────────────
     this.playerObject.position.addScaledVector(moveDir, speed * delta);
 
-    // ── Apply vertical velocity ────────────────────────────────
-    this.playerObject.position.y += this.velocity.y * delta;
+    // ── Apply vertical velocity (only when not already grounded) ──
+    if (!this.onGround) {
+      this.playerObject.position.y += this.velocity.y * delta;
+    }
 
     // ── Fall-through guard: reset to spawn ─────────────────────
-    if (this.playerObject.position.y < -20) {
-      this.playerObject.position.set(2, 5, 2);
+    if (this.playerObject.position.y < -50) {
+      this.playerObject.position.set(0, 30, 0);
       this.velocity.set(0, 0, 0);
     }
   }
