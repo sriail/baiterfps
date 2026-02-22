@@ -17,6 +17,11 @@ const WALL_CHECK_HEIGHT_FOOT  = 0.3;  // ray height for foot-level wall detectio
 const WALL_CHECK_HEIGHT_CHEST = 1.0;  // ray height for chest-level wall detection
 const WALL_CHECK_HEIGHT_HEAD  = 1.5;  // ray height for head-level wall detection
 
+// Per-map scale factors. arabic_city stores geometry in centimetre-scale world units;
+// without correction the tallest structures are only ~2.88 m in world space.
+// Scale 3 brings buildings to ~8–9 m – correct for multi-story arabic architecture.
+const MAP_SCALES = { arabic_city: 3 };
+
 export class Game {
   constructor(lobbyData, playerName) {
     this.lobbyData   = lobbyData;
@@ -274,6 +279,14 @@ export class Game {
       loader.load(
         `/maps/${mapName}/scene.glb`,
         (gltf) => {
+          // Scale the map so buildings appear at realistic height relative to the 1.75 m player.
+          // Each map may need a different correction factor (see MAP_SCALES).
+          const mapScale = MAP_SCALES[mapName] ?? 1;
+          gltf.scene.scale.setScalar(mapScale);
+          // Recompute world matrices now so the collision-size filter below uses
+          // the scaled dimensions, not the raw (too-small) values.
+          gltf.scene.updateMatrixWorld(true);
+
           gltf.scene.traverse((node) => {
             if (!node.isMesh) return;
             node.matrixAutoUpdate = false;
