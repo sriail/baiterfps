@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BaiterFPS</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════ HOME SCREEN ═══════════════════ -->
+  <div id="home-screen">
+    <div class="title-container">
+      <h1 class="game-title">BaiterFPS</h1>
+      <p class="subtitle">Tactical Multiplayer FPS</p>
+    </div>
+
+    <div class="name-section">
+      <input id="player-name" type="text" placeholder="Enter your name..." maxlength="16" />
+      <button id="random-name-btn">🎲 Random</button>
+    </div>
+
+    <div class="buttons">
+      <button id="play-btn">▶ PLAY</button>
+      <button id="enter-code-btn"># ENTER CODE</button>
+    </div>
+
+    <div id="status-msg"></div>
+  </div>
+
+  <!-- ════════════════════════════════════ ENTER CODE MODAL ═════════════════ -->
+  <div id="code-modal" style="display:none;">
+    <div class="modal-content">
+      <h2>Enter Lobby Code</h2>
+      <input
+        id="lobby-code-input"
+        type="text"
+        placeholder="XXXXXX"
+        maxlength="6"
+        style="text-transform:uppercase;"
+      />
+      <div class="modal-buttons">
+        <button id="join-code-btn">JOIN</button>
+        <button id="cancel-code-btn">CANCEL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════ GAME SCREEN ═══════════════════ -->
+  <div id="game-screen" style="display:none;">
+
+    <!-- Three.js canvas goes here -->
+    <div id="game-canvas-container"></div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div id="lobby-info">
+        <span>LOBBY: </span><span id="lobby-code"></span>
+        <button id="copy-code-btn">📋 Copy</button>
+      </div>
+      <div id="player-count">Players: 1/18</div>
+    </div>
+
+    <!-- Crosshair -->
+    <div id="crosshair">+</div>
+
+    <!-- Chat -->
+    <div id="chat-container">
+      <div id="chat-messages"></div>
+      <div id="chat-input-area">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="Type message… (Enter to send, Esc to close)"
+        />
+        <button id="chat-send">Send</button>
+      </div>
+    </div>
+
+    <!-- Loading screen -->
+    <div id="loading-screen">
+      <div class="loading-content">
+        <h2>Loading...</h2>
+        <div id="loading-text">Initializing...</div>
+        <div class="progress-bar">
+          <div id="progress-fill"></div>
+        </div>
+        <div id="loading-progress">0%</div>
+      </div>
+    </div>
+
+    <!-- Chat hint -->
+    <div id="chat-hint">Press T to chat</div>
+
+    <!-- Game alerts (join/leave) -->
+    <div id="game-alerts"></div>
+
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
