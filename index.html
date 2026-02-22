@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BaiterFPS</title>
   <link rel="stylesheet" href="/src/style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
 </head>
 <body>
 
@@ -17,12 +18,12 @@
 
     <div class="name-section">
       <input id="player-name" type="text" placeholder="Enter your name..." maxlength="16" />
-      <button id="random-name-btn">🎲 Random</button>
+      <button id="random-name-btn"><i class="ti ti-dice-5"></i> Random</button>
     </div>
 
     <div class="buttons">
-      <button id="play-btn">▶ PLAY</button>
-      <button id="enter-code-btn"># ENTER CODE</button>
+      <button id="play-btn"><i class="ti ti-player-play-filled"></i> PLAY</button>
+      <button id="enter-code-btn"><i class="ti ti-hash"></i> ENTER CODE</button>
     </div>
 
     <div id="status-msg"></div>
@@ -56,7 +57,7 @@
     <div id="hud">
       <div id="lobby-info">
         <span>LOBBY: </span><span id="lobby-code"></span>
-        <button id="copy-code-btn">📋 Copy</button>
+        <button id="copy-code-btn"><i class="ti ti-clipboard"></i> <span id="copy-code-text">Copy</span></button>
       </div>
       <div id="player-count">Players: 1/18</div>
     </div>

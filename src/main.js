@@ -49,9 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const code = lobbyCodeSpan.textContent;
     if (!code) return;
     navigator.clipboard.writeText(code).then(() => {
-      const orig = copyCodeBtn.textContent;
-      copyCodeBtn.textContent = '✔ Copied!';
-      setTimeout(() => { copyCodeBtn.textContent = orig; }, 1500);
+      const textSpan = document.getElementById('copy-code-text');
+      const orig = textSpan.textContent;
+      textSpan.textContent = 'Copied!';
+      setTimeout(() => { textSpan.textContent = orig; }, 1500);
     }).catch(() => {});
   });
 });
