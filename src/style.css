@@ -1,0 +1,439 @@
+/* ══════════════════════════════════════════════════════════════
+   BaiterFPS — Global Stylesheet
+   ══════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #0a0a0f;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ─── Home Screen ──────────────────────────────────────────── */
+
+#home-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 40%, #0d1a2a 0%, #0a0a0f 70%);
+  z-index: 100;
+  gap: 0;
+}
+
+.title-container {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.game-title {
+  font-size: 5rem;
+  font-weight: 900;
+  color: #00aaff;
+  text-shadow:
+    0 0 20px #00aaff,
+    0 0 40px #00aaff88,
+    0 0 80px #00aaff44;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  color: #556677;
+  font-size: 1rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-top: 0.4rem;
+}
+
+/* ─── Name section ─────────────────────────────────────────── */
+
+.name-section {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+input[type="text"] {
+  background: #111217;
+  border: 1px solid #00aaff44;
+  color: #e0e0e0;
+  padding: 0.55rem 0.9rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+input[type="text"]:focus {
+  border-color: #00aaff;
+  box-shadow: 0 0 8px #00aaff44;
+}
+
+input[type="text"]::placeholder {
+  color: #445566;
+}
+
+/* ─── Buttons ──────────────────────────────────────────────── */
+
+button {
+  background: #00aaff15;
+  border: 1px solid #00aaff;
+  color: #00aaff;
+  padding: 0.55rem 1.1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+button:hover {
+  background: #00aaff30;
+  box-shadow: 0 0 10px #00aaff44;
+}
+
+button:active {
+  background: #00aaff44;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+#play-btn {
+  font-size: 1.05rem;
+  padding: 0.65rem 2rem;
+  background: #00aaff22;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+#play-btn:hover {
+  background: #00aaff44;
+}
+
+#status-msg {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #ff6644;
+  min-height: 1.2em;
+  text-align: center;
+}
+
+/* ─── Code Modal ───────────────────────────────────────────── */
+
+#code-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+.modal-content {
+  background: #0d1520;
+  border: 1px solid #00aaff55;
+  padding: 2rem 2.5rem;
+  border-radius: 8px;
+  max-width: 400px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 0 30px #00aaff22;
+}
+
+.modal-content h2 {
+  color: #00aaff;
+  font-size: 1.3rem;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.modal-content input[type="text"] {
+  width: 100%;
+  font-size: 1.4rem;
+  text-align: center;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* ─── Game Screen ──────────────────────────────────────────── */
+
+#game-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+#game-canvas-container {
+  position: absolute;
+  inset: 0;
+}
+
+#game-canvas-container canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ─── HUD ──────────────────────────────────────────────────── */
+
+#hud {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.75rem 1rem;
+  pointer-events: none;
+  z-index: 60;
+}
+
+#lobby-info,
+#player-count {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid #00aaff44;
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: #99ccff;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+#lobby-code {
+  font-weight: 700;
+  color: #00aaff;
+  letter-spacing: 0.15em;
+}
+
+#copy-code-btn {
+  pointer-events: all;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.75rem;
+  border-radius: 3px;
+}
+
+/* ─── Crosshair ────────────────────────────────────────────── */
+
+#crosshair {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 22px;
+  font-weight: 300;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  z-index: 60;
+  line-height: 1;
+  user-select: none;
+}
+
+/* ─── Chat ─────────────────────────────────────────────────── */
+
+#chat-container {
+  position: fixed;
+  bottom: 2.5rem;
+  left: 1rem;
+  width: 350px;
+  z-index: 60;
+}
+
+#chat-messages {
+  max-height: 200px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 0.5rem 0.65rem;
+  border-radius: 4px;
+  margin-bottom: 0.4rem;
+  scrollbar-width: thin;
+  scrollbar-color: #00aaff44 transparent;
+}
+
+#chat-messages:empty {
+  display: none;
+}
+
+.chat-msg {
+  padding: 2px 0;
+  font-size: 13px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.chat-msg .name {
+  color: #00aaff;
+  font-weight: 700;
+}
+
+.chat-msg.system .sys {
+  color: #aaaaaa;
+  font-style: italic;
+}
+
+#chat-input-area {
+  display: none;
+  flex-direction: row;
+  gap: 0.4rem;
+}
+
+#chat-input-area.active {
+  display: flex;
+}
+
+#chat-input {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid #00aaff66;
+  color: #e0e0e0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+#chat-send {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+/* ─── Chat Hint ────────────────────────────────────────────── */
+
+#chat-hint {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  font-size: 0.72rem;
+  color: #445566;
+  pointer-events: none;
+  z-index: 60;
+  letter-spacing: 0.05em;
+}
+
+/* ─── Loading Screen ───────────────────────────────────────── */
+
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  background: #0a0a0f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 150;
+}
+
+.loading-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.loading-content h2 {
+  color: #00aaff;
+  font-size: 1.8rem;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 20px #00aaff88;
+}
+
+#loading-text {
+  color: #667788;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+
+.progress-bar {
+  width: 300px;
+  height: 8px;
+  background: #111217;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0.4rem 0;
+  border: 1px solid #00aaff22;
+}
+
+#progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #0066aa, #00aaff);
+  width: 0%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+#loading-progress {
+  color: #00aaff;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* ─── Game Alerts ──────────────────────────────────────────── */
+
+#game-alerts {
+  position: fixed;
+  top: 4rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  z-index: 70;
+  pointer-events: none;
+}
+
+.game-alert {
+  background: rgba(0, 0, 0, 0.65);
+  border-left: 3px solid #00aaff;
+  padding: 0.45rem 0.9rem;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.82rem;
+  color: #cce8ff;
+  animation: alertFade 4s ease forwards;
+  max-width: 260px;
+}
+
+/* ─── Keyframes ────────────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes alertFade {
+  0%   { opacity: 0; transform: translateX(20px); }
+  10%  { opacity: 1; transform: translateX(0); }
+  75%  { opacity: 1; }
+  100% { opacity: 0; }
+}

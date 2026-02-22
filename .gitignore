@@ -1,0 +1,5 @@
+node_modules/
+dist/
+public/maps/arabic_city/
+public/characters/
+public/weapons/ar15/
