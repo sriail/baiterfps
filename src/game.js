@@ -11,8 +11,11 @@ const GRAVITY               = -20;
 const JUMP_FORCE            = 8;
 const BROADCAST_RATE        = 50;    // ms
 const FOOTSTEP_WALK_INTERVAL = 0.5;  // seconds between walk steps
-const FOOTSTEP_RUN_INTERVAL  = 0.35; // seconds between run steps
+const FOOTSTEP_RUN_INTERVAL  = 0.25; // seconds between run steps
 const FOOTSTEP_AUDIO_RANGE   = 20;   // max distance (m) to hear remote footsteps
+const WALL_CHECK_HEIGHT_FOOT  = 0.3;  // ray height for foot-level wall detection
+const WALL_CHECK_HEIGHT_CHEST = 1.0;  // ray height for chest-level wall detection
+const WALL_CHECK_HEIGHT_HEAD  = 1.5;  // ray height for head-level wall detection
 
 export class Game {
   constructor(lobbyData, playerName) {
@@ -53,6 +56,19 @@ export class Game {
 
     this._footstepAudios = [];
     this._stepTimer      = 0;
+
+    // Cached reusable objects – avoids per-frame heap allocations / GC pressure.
+    // JavaScript is single-threaded so these are safe to reuse across calls.
+    this._euler        = new THREE.Euler(0, 0, 0, 'YXZ');
+    this._forward      = new THREE.Vector3();
+    this._right        = new THREE.Vector3();
+    this._moveDir      = new THREE.Vector3();
+    this._wallCheckDir = new THREE.Vector3(); // unit direction vector for wall raycasts
+    this._groundOrigin = new THREE.Vector3();
+    this._wallOrigin   = new THREE.Vector3();
+    this._normalMatrix = new THREE.Matrix3();
+    this._worldNormal  = new THREE.Vector3();
+    this._downVec      = new THREE.Vector3(0, -1, 0);
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -93,7 +109,7 @@ export class Game {
   // ═══════════════════════════════════════════════════════════════
 
   setupRenderer(container) {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', stencil: false });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -209,7 +225,7 @@ export class Game {
     // ── Character model ──────────────────────────────────────────
     try {
       const model = await fbxLoader.loadAsync('/characters/terrorist-soldier.fbx');
-      model.scale.setScalar(0.00125); // 1/8 of original 0.01
+      model.scale.setScalar(0.01); // ~1.75 m world height for a standard Mixamo FBX
       this.sharedCharacterModel = model;
     } catch (err) {
       console.warn('Could not load character model:', err.message);
@@ -447,9 +463,10 @@ export class Game {
     // Start idle
     if (anims.idle) anims.idle.play();
 
-    // Nametag sprite
+    // Nametag sprite – position is in model-local space (scale 0.01 → world units)
+    // y = 200 → 200 * 0.01 = 2 m above feet
     const nameTag = this._createNametag(data.name || 'Player');
-    nameTag.position.set(0, 1600, 0); // above feet in local space (scale 0.00125 → ~2m world)
+    nameTag.position.set(0, 200, 0);
     model.add(nameTag);
 
     this.scene.add(model);
@@ -480,9 +497,9 @@ export class Game {
     const texture = new THREE.CanvasTexture(canvas);
     const mat     = new THREE.SpriteMaterial({ map: texture, depthTest: false });
     const sprite  = new THREE.Sprite(mat);
-    // Model scale is 0.00125, so world scale = sprite.scale * 0.00125
-    // We want world 1.5m × 0.375m → local 1200 × 300
-    sprite.scale.set(1200, 300, 1);
+    // Model scale is 0.01, so world size = sprite.scale * 0.01
+    // World size: ~1.5 m wide × 0.4 m tall → local 150 × 40
+    sprite.scale.set(150, 40, 1);
     return sprite;
   }
 
@@ -761,11 +778,12 @@ export class Game {
   }
 
   _updateMovement(delta) {
-    const euler   = new THREE.Euler(0, this.yaw, 0, 'YXZ');
-    const forward = new THREE.Vector3(0, 0, -1).applyEuler(euler);
-    const right   = new THREE.Vector3(1, 0, 0).applyEuler(euler);
-    forward.y = 0; forward.normalize();
-    right.y   = 0; right.normalize();
+    // Reuse cached objects to avoid per-frame heap allocations
+    this._euler.set(0, this.yaw, 0, 'YXZ');
+    this._forward.set(0, 0, -1).applyEuler(this._euler);
+    this._right.set(1, 0, 0).applyEuler(this._euler);
+    this._forward.y = 0; this._forward.normalize();
+    this._right.y   = 0; this._right.normalize();
 
     const w = this.keys['KeyW'] || this.keys['ArrowUp'];
     const s = this.keys['KeyS'] || this.keys['ArrowDown'];
@@ -773,25 +791,24 @@ export class Game {
     const d = this.keys['KeyD'] || this.keys['ArrowRight'];
     const shift = this.keys['ShiftLeft'] || this.keys['ShiftRight'];
 
-    const moveDir = new THREE.Vector3();
-    if (w) moveDir.addScaledVector(forward, 1);
-    if (s) moveDir.addScaledVector(forward, -1);
-    if (a) moveDir.addScaledVector(right, -1);
-    if (d) moveDir.addScaledVector(right, 1);
+    this._moveDir.set(0, 0, 0);
+    if (w) this._moveDir.addScaledVector(this._forward, 1);
+    if (s) this._moveDir.addScaledVector(this._forward, -1);
+    if (a) this._moveDir.addScaledVector(this._right, -1);
+    if (d) this._moveDir.addScaledVector(this._right, 1);
 
-    const moving   = moveDir.lengthSq() > 0;
+    const moving   = this._moveDir.lengthSq() > 0;
     const speed    = shift ? PLAYER_RUN_SPEED : PLAYER_MOVE_SPEED;
     const isBack   = s && !w;
-    const isStrafe = (a || d) && !w && !s;
 
     // ── Determine animation state ──────────────────────────────
     let animState = 'idle';
     if (moving) {
-      if (shift && !isBack) animState = 'run';
-      else if (isBack)      animState = 'walkBack';
-      else if (a && !w && !s) animState = 'strafeLeft';
-      else if (d && !w && !s) animState = 'strafeRight';
-      else                  animState = 'walk';
+      if (shift && !isBack)       animState = 'run';
+      else if (isBack)            animState = 'walkBack';
+      else if (a && !w && !s)     animState = 'strafeLeft';
+      else if (d && !w && !s)     animState = 'strafeRight';
+      else                        animState = 'walk';
     }
     this._playLocalAnimation(animState);
 
@@ -808,17 +825,15 @@ export class Game {
     }
 
     // ── Normalise diagonal movement ────────────────────────────
-    if (moving) moveDir.normalize();
+    if (moving) this._moveDir.normalize();
 
     // ── Gravity ────────────────────────────────────────────────
     this.velocity.y += GRAVITY * delta;
 
     // ── Ground check (long-range downward raycast) ────────────
-    // Ray from slightly above feet, shoots down far enough to
-    // catch the ground even after a fast fall.
-    const groundOrigin = this.playerObject.position.clone();
-    groundOrigin.y += 0.2; // slightly above feet
-    this._raycaster.set(groundOrigin, new THREE.Vector3(0, -1, 0));
+    this._groundOrigin.copy(this.playerObject.position);
+    this._groundOrigin.y += 0.2;
+    this._raycaster.set(this._groundOrigin, this._downVec);
     this._raycaster.far = 300;
 
     let groundY = null;
@@ -831,12 +846,10 @@ export class Game {
     const nextY = this.playerObject.position.y + this.velocity.y * delta;
 
     if (groundY !== null && this.velocity.y <= 0 && nextY <= groundY) {
-      // Player would land on or pass through ground this frame — snap feet to ground
       this.playerObject.position.y = groundY;
       this.onGround = true;
       this.velocity.y = 0;
     } else if (groundY !== null && this.playerObject.position.y <= groundY + 0.05 && this.velocity.y <= 0) {
-      // Already at ground level
       this.playerObject.position.y = groundY;
       this.onGround = true;
       this.velocity.y = 0;
@@ -850,32 +863,38 @@ export class Game {
       this.onGround   = false;
     }
 
-    // ── Wall collision (horizontal) ───────────────────────────
+    // ── Wall collision (horizontal) – check at three heights ──
     if (moving && this.collisionMeshes.length > 0) {
-      const wallOrigin = this.playerObject.position.clone();
-      wallOrigin.y += 1.0; // chest height
-      this._raycaster.set(wallOrigin, moveDir.clone().normalize());
-      this._raycaster.far = 0.5;
-      const wallHits = this._raycaster.intersectObjects(this.collisionMeshes, false);
-      if (wallHits.length > 0) {
-        // Slide along wall: remove the component of moveDir along the wall normal
-        const hit = wallHits[0];
-        if (hit.face) {
-          // Transform local face normal to world space
-          const normalMatrix = new THREE.Matrix3().getNormalMatrix(hit.object.matrixWorld);
-          const worldNormal = hit.face.normal.clone().applyMatrix3(normalMatrix).normalize();
-          worldNormal.y = 0;
-          if (worldNormal.lengthSq() > 0.001) {
-            worldNormal.normalize();
-            const dot = moveDir.dot(worldNormal);
-            if (dot < 0) moveDir.addScaledVector(worldNormal, -dot);
+      this._wallCheckDir.copy(this._moveDir); // _moveDir is already normalised
+      let bestHit = null;
+
+      for (const h of [WALL_CHECK_HEIGHT_FOOT, WALL_CHECK_HEIGHT_CHEST, WALL_CHECK_HEIGHT_HEAD]) {
+        this._wallOrigin.copy(this.playerObject.position);
+        this._wallOrigin.y += h;
+        this._raycaster.set(this._wallOrigin, this._wallCheckDir);
+        this._raycaster.far = 0.5;
+        const wallHits = this._raycaster.intersectObjects(this.collisionMeshes, false);
+        if (wallHits.length > 0 && wallHits[0].face) {
+          if (!bestHit || wallHits[0].distance < bestHit.distance) {
+            bestHit = wallHits[0];
           }
+        }
+      }
+
+      if (bestHit && bestHit.face) {
+        this._normalMatrix.getNormalMatrix(bestHit.object.matrixWorld);
+        this._worldNormal.copy(bestHit.face.normal).applyMatrix3(this._normalMatrix).normalize();
+        this._worldNormal.y = 0;
+        if (this._worldNormal.lengthSq() > 0.001) {
+          this._worldNormal.normalize();
+          const dot = this._moveDir.dot(this._worldNormal);
+          if (dot < 0) this._moveDir.addScaledVector(this._worldNormal, -dot);
         }
       }
     }
 
     // ── Apply horizontal movement ──────────────────────────────
-    this.playerObject.position.addScaledVector(moveDir, speed * delta);
+    this.playerObject.position.addScaledVector(this._moveDir, speed * delta);
 
     // ── Apply vertical velocity (only when not already grounded) ──
     if (!this.onGround) {
