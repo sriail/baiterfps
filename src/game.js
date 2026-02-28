@@ -5,17 +5,17 @@ import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 const PLAYER_MOVE_SPEED     = 5;
 const PLAYER_RUN_SPEED      = 9;
-const PLAYER_HEIGHT         = 1.7;   // eye height
-const CAPSULE_HEIGHT        = 1.8;   // full capsule
+const PLAYER_HEIGHT         = 0.85;  // eye height (half of original 1.7)
+const CAPSULE_HEIGHT        = 0.9;   // full capsule (half of original 1.8)
 const GRAVITY               = -20;
-const JUMP_FORCE            = 8;
+const JUMP_FORCE            = 4;     // jump force (half of original 8)
 const BROADCAST_RATE        = 50;    // ms
 const FOOTSTEP_WALK_INTERVAL = 0.5;  // seconds between walk steps
 const FOOTSTEP_RUN_INTERVAL  = 0.25; // seconds between run steps
 const FOOTSTEP_AUDIO_RANGE   = 20;   // max distance (m) to hear remote footsteps
-const WALL_CHECK_HEIGHT_FOOT  = 0.3;  // ray height for foot-level wall detection
-const WALL_CHECK_HEIGHT_CHEST = 1.0;  // ray height for chest-level wall detection
-const WALL_CHECK_HEIGHT_HEAD  = 1.5;  // ray height for head-level wall detection
+const WALL_CHECK_HEIGHT_FOOT  = 0.15; // ray height for foot-level wall detection
+const WALL_CHECK_HEIGHT_CHEST = 0.5;  // ray height for chest-level wall detection
+const WALL_CHECK_HEIGHT_HEAD  = 0.75; // ray height for head-level wall detection
 
 // Per-map scale factors. arabic_city stores geometry in centimetre-scale world units;
 // without correction the tallest structures are only ~2.88 m in world space.
@@ -230,12 +230,12 @@ export class Game {
     // ── Character model ──────────────────────────────────────────
     try {
       const model = await fbxLoader.loadAsync('/characters/terrorist-soldier.fbx');
-      model.scale.setScalar(0.01); // ~1.75 m world height for a standard Mixamo FBX
+      model.scale.setScalar(0.005); // ~0.875 m world height (half scale) for a standard Mixamo FBX
       this.sharedCharacterModel = model;
     } catch (err) {
       console.warn('Could not load character model:', err.message);
       // Fallback: box placeholder
-      const geo = new THREE.BoxGeometry(0.5, 1.8, 0.3);
+      const geo = new THREE.BoxGeometry(0.25, 0.9, 0.15);
       const mat = new THREE.MeshStandardMaterial({ color: 0x446688 });
       this.sharedCharacterModel = new THREE.Mesh(geo, mat);
     }
@@ -476,8 +476,8 @@ export class Game {
     // Start idle
     if (anims.idle) anims.idle.play();
 
-    // Nametag sprite – position is in model-local space (scale 0.01 → world units)
-    // y = 200 → 200 * 0.01 = 2 m above feet
+    // Nametag sprite – position is in model-local space (scale 0.005 → world units)
+    // y = 200 → 200 * 0.005 = 1 m above feet (just above 0.9 m capsule height)
     const nameTag = this._createNametag(data.name || 'Player');
     nameTag.position.set(0, 200, 0);
     model.add(nameTag);
@@ -510,8 +510,8 @@ export class Game {
     const texture = new THREE.CanvasTexture(canvas);
     const mat     = new THREE.SpriteMaterial({ map: texture, depthTest: false });
     const sprite  = new THREE.Sprite(mat);
-    // Model scale is 0.01, so world size = sprite.scale * 0.01
-    // World size: ~1.5 m wide × 0.4 m tall → local 150 × 40
+    // Model scale is 0.005, so world size = sprite.scale * 0.005
+    // World size: ~0.75 m wide × 0.2 m tall → local 150 × 40
     sprite.scale.set(150, 40, 1);
     return sprite;
   }
