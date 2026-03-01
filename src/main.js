@@ -82,7 +82,8 @@ function connectAndPlay(code) {
     try { window._gameSocket.disconnect(); } catch (_) {}
   }
 
-  const socket = io();
+  const socketUrl = import.meta.env.VITE_SOCKET_URL || '';
+  const socket = io(socketUrl);
   window._gameSocket = socket;
 
   socket.once('joinedLobby', async (data) => {
